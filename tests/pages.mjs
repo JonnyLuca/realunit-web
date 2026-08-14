@@ -131,6 +131,12 @@ export const VIEWS = [
     waitFor: 'already-completed',
     projects: ['desktop-chromium', 'mobile-safari'],
   },
+  {
+    slug: 'merge-already-completed-en',
+    path: '/account-merge/?mock=already-completed&lang=en',
+    waitFor: 'already-completed',
+    projects: ['desktop-chromium'],
+  },
   // Account-merge — invalid state (bad/expired link).
   {
     slug: 'merge-invalid',

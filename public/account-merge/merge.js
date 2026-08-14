@@ -83,6 +83,8 @@
 
   // Poll a DFX async job until it is terminal or the budget expires. Keeps the
   // loading state visible; there is no state-job UI.
+  // First GET runs immediately so expectedSeconds <= 1 can still observe Complete;
+  // the 1s interval applies only between subsequent polls.
   function pollJob(base, jobBody, otp) {
     var uid = jobBody.uid;
     var budgetSec =
@@ -92,54 +94,75 @@
     var budgetMs = budgetSec * 1000;
     var started = Date.now();
 
-    function tick() {
-      if (Date.now() - started >= budgetMs) {
-        render('unavailable');
-        return;
-      }
+    function scheduleNext() {
       setTimeout(function () {
         if (Date.now() - started >= budgetMs) {
           render('unavailable');
           return;
         }
-        fetch(core.buildJobUrl(base, uid), {
-          method: 'GET',
-          headers: { Accept: 'application/json' },
-          credentials: 'omit',
-        })
-          .then(function (res) {
-            return res
-              .json()
-              .then(function (body) {
-                return body;
-              })
-              .catch(function () {
-                // JSON failure on a poll is treated as unavailable.
-                throw new Error('job-json');
-              });
-          })
-          .then(function (body) {
-            var status = body && body.status;
-            if (core.isJobTerminal(status)) {
-              if (status === 'Complete') {
-                // Job finished: re-run the mail-confirm call with the same OTP.
-                fetchConfirm(base, otp);
-              } else {
-                // Failed or DeadLetter.
-                render('unavailable');
-              }
-            } else {
-              // Pending / Processing / Retry / unknown — keep polling.
-              tick();
-            }
-          })
-          .catch(function () {
-            render('unavailable');
-          });
+        pollOnce();
       }, 1000);
     }
 
-    tick();
+    function pollOnce() {
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function () {
+        controller.abort();
+      }, 15000);
+
+      fetch(core.buildJobUrl(base, uid), {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        credentials: 'omit',
+        signal: controller.signal,
+      })
+        .then(function (res) {
+          return res
+            .json()
+            .then(function (body) {
+              return body;
+            })
+            .catch(function () {
+              // JSON failure on a poll is treated as unavailable.
+              throw new Error('job-json');
+            });
+        })
+        .then(function (body) {
+          clearTimeout(timeoutId);
+          var status = body && body.status;
+          if (core.isJobTerminal(status)) {
+            if (status === 'Complete') {
+              // Job finished: re-run the mail-confirm call with the same OTP.
+              fetchConfirm(base, otp);
+            } else {
+              // Failed or DeadLetter.
+              render('unavailable');
+            }
+          } else {
+            // Pending / Processing / Retry / unknown — keep polling.
+            if (Date.now() - started >= budgetMs) {
+              render('unavailable');
+            } else {
+              scheduleNext();
+            }
+          }
+        })
+        .catch(function (err) {
+          clearTimeout(timeoutId);
+          // Abort: keep polling while budget remains; other failures → unavailable.
+          if (err && err.name === 'AbortError') {
+            if (Date.now() - started < budgetMs) {
+              scheduleNext();
+            } else {
+              render('unavailable');
+            }
+          } else {
+            render('unavailable');
+          }
+        });
+    }
+
+    pollOnce();
   }
 
   function fetchConfirm(base, otp) {

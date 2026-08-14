@@ -347,6 +347,42 @@ test.describe('account-merge flow', () => {
     expect(confirmCalls).toBe(2);
   });
 
+  test('a 202 job with expectedSeconds 1 that is Complete on the first job GET still reaches confirmed', async ({
+    page,
+  }) => {
+    let confirmCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls += 1;
+      if (confirmCalls === 1) {
+        route.fulfill({
+          status: 202,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            uid: 'job-1',
+            status: 'Pending',
+            expectedSeconds: 1,
+          }),
+        });
+      } else {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ kycHash: 'x' }),
+        });
+      }
+    });
+    await page.route(MERGE_JOB_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ uid: 'job-1', status: 'Complete' }),
+      }),
+    );
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-confirmed')).toBeVisible({ timeout: 10000 });
+    expect(confirmCalls).toBe(2);
+  });
+
   test('a network error shows the unavailable state', async ({ page }) => {
     await page.route(MERGE_CONFIRM_ENDPOINT, (route) => route.abort());
     await page.goto('/account-merge/?otp=abc');
