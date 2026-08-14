@@ -383,6 +383,75 @@ test.describe('account-merge flow', () => {
     expect(confirmCalls).toBe(2);
   });
 
+  test('after Complete, a second confirm that returns another job-shaped 202 shows unavailable', async ({
+    page,
+  }) => {
+    let confirmCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls += 1;
+      if (confirmCalls === 1) {
+        route.fulfill({
+          status: 202,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            uid: 'job-1',
+            status: 'Pending',
+            expectedSeconds: 2,
+          }),
+        });
+      } else {
+        // Re-confirm after Complete still returns a job — that is an error, not a new budget.
+        route.fulfill({
+          status: 202,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            uid: 'job-2',
+            status: 'Pending',
+            expectedSeconds: 60,
+          }),
+        });
+      }
+    });
+    await page.route(MERGE_JOB_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ uid: 'job-1', status: 'Complete' }),
+      }),
+    );
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-unavailable')).toBeVisible({ timeout: 10000 });
+    expect(confirmCalls).toBe(2);
+  });
+
+  test('a job GET that returns 404 JSON without status shows unavailable without re-polling', async ({
+    page,
+  }) => {
+    let jobCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 202,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          uid: 'job-1',
+          status: 'Pending',
+          expectedSeconds: 60,
+        }),
+      }),
+    );
+    await page.route(MERGE_JOB_ENDPOINT, (route) => {
+      jobCalls += 1;
+      route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'not found' }),
+      });
+    });
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-unavailable')).toBeVisible({ timeout: 10000 });
+    expect(jobCalls).toBe(1);
+  });
+
   test('a network error shows the unavailable state', async ({ page }) => {
     await page.route(MERGE_CONFIRM_ENDPOINT, (route) => route.abort());
     await page.goto('/account-merge/?otp=abc');

@@ -120,20 +120,25 @@
           return res
             .json()
             .then(function (body) {
-              return body;
+              return { status: res.status, body: body };
             })
             .catch(function () {
               // JSON failure on a poll is treated as unavailable.
               throw new Error('job-json');
             });
         })
-        .then(function (body) {
+        .then(function (r) {
           clearTimeout(timeoutId);
-          var status = body && body.status;
+          // Non-2xx job GET is unavailable; do not read body.status as in-flight.
+          if (!(r.status >= 200 && r.status < 300)) {
+            render('unavailable');
+            return;
+          }
+          var status = r.body && r.body.status;
           if (core.isJobTerminal(status)) {
             if (status === 'Complete') {
-              // Job finished: re-run the mail-confirm call with the same OTP.
-              fetchConfirm(base, otp);
+              // Job finished: re-confirm with the same OTP; a second job is an error.
+              fetchConfirm(base, otp, false);
             } else {
               // Failed or DeadLetter.
               render('unavailable');
@@ -165,7 +170,9 @@
     pollOnce();
   }
 
-  function fetchConfirm(base, otp) {
+  // allowJob: true on the first confirm (and retry); false on re-confirm after
+  // job Complete — a second job ticket is an error, not a new poll budget.
+  function fetchConfirm(base, otp, allowJob) {
     // Abort a stalled request so the spinner can never hang forever.
     var controller = new AbortController();
     var timeoutId = setTimeout(function () {
@@ -184,9 +191,11 @@
       .then(function (r) {
         clearTimeout(timeoutId);
         var state = core.mapHttpToState(r.status, r.body);
-        if (state === 'job') {
+        if (state === 'job' && allowJob) {
           // Keep showing loading while the job is polled; no state-job UI.
           pollJob(base, r.body, otp);
+        } else if (state === 'job' && !allowJob) {
+          render('unavailable');
         } else {
           render(state);
         }
@@ -225,7 +234,7 @@
     }
 
     var base = core.apiBase({ host: host, paramApi: params.get('api') });
-    fetchConfirm(base, otp);
+    fetchConfirm(base, otp, true);
   }
 
   document.getElementById('retry').addEventListener('click', confirm);
