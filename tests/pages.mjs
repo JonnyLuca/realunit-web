@@ -5,10 +5,10 @@
 
 export const PORT = 4173;
 
-// Every public HTML page, used by the smoke spec. `/confirm-aktionariat/` loads
-// with no query params, so it renders the "invalid link" state without making a
-// network request.
-export const PAGES = ['/', '/confirm-aktionariat/', '/404.html'];
+// Every public HTML page, used by the smoke spec. `/confirm-aktionariat/` and
+// `/account-merge/` load with no query params, so they render the "invalid link"
+// state without making a network request.
+export const PAGES = ['/', '/confirm-aktionariat/', '/account-merge/', '/404.html'];
 
 // Viewports the visual suite renders: desktop, a real tablet width, and a phone.
 export const PROJECTS = ['desktop-chromium', 'tablet-chromium', 'mobile-safari'];
@@ -19,15 +19,16 @@ export const PROJECTS = ['desktop-chromium', 'tablet-chromium', 'mobile-safari']
 //   platform — optional forced platform ('ios' | 'android'); applied via a UA
 //              override before the page scripts run, so platform.js sets
 //              html[data-platform] deterministically regardless of the device
-//   waitFor  — optional confirm-page state ('confirmed' | 'invalid' |
-//              'no-registration' | 'unavailable') to wait for before the shot (the
-//              ?mock hook renders it after a short delay)
+//   waitFor  — optional confirm/merge-page state ('confirmed' | 'already-completed' |
+//              'invalid' | 'no-registration' | 'unavailable') to wait for before the
+//              shot (the ?mock hook renders it after a short delay)
 //   projects — the viewports this view applies to
 //
 // Coverage: the landing page in both its equal-badge (desktop/tablet) and
 // platform-matched (iOS/Android phone) layouts, every confirm-page end state in
-// both languages and both the desktop and phone confirmed variants, and the 404
-// page — each on the viewports where it differs.
+// both languages and both the desktop and phone confirmed variants, every
+// account-merge end state (same pattern), and the 404 page — each on the
+// viewports where it differs.
 export const VIEWS = [
   // Landing — equal-badge layout (desktop/tablet get no data-platform).
   { slug: 'home', path: '/', projects: ['desktop-chromium', 'tablet-chromium'] },
@@ -97,6 +98,62 @@ export const VIEWS = [
   {
     slug: 'confirm-unavailable-en',
     path: '/confirm-aktionariat/?mock=unavailable&lang=en',
+    waitFor: 'unavailable',
+    projects: ['desktop-chromium'],
+  },
+
+  // Account-merge — confirmed state, German, desktop copy ("return on your phone").
+  {
+    slug: 'merge-confirmed',
+    path: '/account-merge/?mock=confirmed&lang=de',
+    waitFor: 'confirmed',
+    projects: ['desktop-chromium', 'tablet-chromium'],
+  },
+  // Account-merge — confirmed state on a phone: the "back to the app" button appears.
+  {
+    slug: 'merge-confirmed-mobile',
+    path: '/account-merge/?mock=confirmed&lang=de',
+    platform: 'ios',
+    waitFor: 'confirmed',
+    projects: ['mobile-safari'],
+  },
+  // Account-merge — confirmed state, English copy.
+  {
+    slug: 'merge-confirmed-en',
+    path: '/account-merge/?mock=confirmed&lang=en',
+    waitFor: 'confirmed',
+    projects: ['desktop-chromium'],
+  },
+  // Account-merge — already-completed state (HTTP 409 / already merged).
+  {
+    slug: 'merge-already-completed',
+    path: '/account-merge/?mock=already-completed&lang=de',
+    waitFor: 'already-completed',
+    projects: ['desktop-chromium', 'mobile-safari'],
+  },
+  // Account-merge — invalid state (bad/expired link).
+  {
+    slug: 'merge-invalid',
+    path: '/account-merge/?mock=invalid&lang=de',
+    waitFor: 'invalid',
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
+  },
+  {
+    slug: 'merge-invalid-en',
+    path: '/account-merge/?mock=invalid&lang=en',
+    waitFor: 'invalid',
+    projects: ['desktop-chromium'],
+  },
+  // Account-merge — service unavailable (the retry button is shown).
+  {
+    slug: 'merge-unavailable',
+    path: '/account-merge/?mock=unavailable&lang=de',
+    waitFor: 'unavailable',
+    projects: ['desktop-chromium', 'mobile-safari'],
+  },
+  {
+    slug: 'merge-unavailable-en',
+    path: '/account-merge/?mock=unavailable&lang=en',
     waitFor: 'unavailable',
     projects: ['desktop-chromium'],
   },
