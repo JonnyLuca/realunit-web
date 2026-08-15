@@ -41,7 +41,7 @@ projects in the DNS/deployment configuration. The `handbook.` subdomain is unaff
 ## Roadmap (v2+)
 
 - `/confirm-aktionariat` — guided Aktionariat address confirmation (calls `api.dfx.swiss`)
-- `/account-merge` — confirms an account merge (calls the public DFX API)
+- `/account-merge` — confirms adding a wallet address to the existing account (calls the public DFX API)
 - Legal pages — rendered from the app's `assets/legal/*.md` (build-time fetch, single source)
 - Universal Links / App Links (`/.well-known/*`)
 

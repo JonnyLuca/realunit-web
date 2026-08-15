@@ -23,48 +23,49 @@
   // data-i18n key used in the page is present here.
   var I18N = {
     de: {
-      'doc.title': 'RealUnit — Accounts zusammenlegen',
-      'doc.desc': 'Bestätigung der Zusammenlegung Ihrer RealUnit-Accounts.',
-      'loading.title': 'Zusammenlegung läuft…',
-      'loading.body': 'Einen Moment, wir legen Ihre Accounts zusammen.',
-      'confirmed.title': 'Accounts zusammengelegt',
+      'doc.title': 'RealUnit — Adresse hinzufügen',
+      'doc.desc': 'Bestätigung, dass eine Wallet-Adresse Ihrem Konto hinzugefügt wird.',
+      'loading.title': 'Adresse wird hinzugefügt…',
+      'loading.body': 'Einen Moment, wir fügen die Wallet-Adresse Ihrem Konto hinzu.',
+      'confirmed.title': 'Adresse hinzugefügt',
       'confirmed.desktop':
-        'Ihre Accounts sind zusammengelegt. Kehren Sie auf Ihrem Smartphone zur RealUnit-App zurück.',
-      'confirmed.mobile': 'Ihre Accounts sind zusammengelegt.',
+        'Die Wallet-Adresse ist Ihrem Konto hinzugefügt. Kehren Sie auf Ihrem Smartphone zur RealUnit-App zurück.',
+      'confirmed.mobile': 'Die Wallet-Adresse ist Ihrem Konto hinzugefügt.',
       'confirmed.cta': 'Zurück zur App',
-      'already-completed.title': 'Zusammenlegung bereits erfolgt',
+      'already-completed.title': 'Adresse bereits hinzugefügt',
       'already-completed.desktop':
-        'Diese Accounts sind bereits zusammengelegt. Kehren Sie auf Ihrem Smartphone zur RealUnit-App zurück.',
-      'already-completed.mobile': 'Diese Accounts sind bereits zusammengelegt.',
+        'Diese Wallet-Adresse ist bereits auf Ihrem Konto. Kehren Sie auf Ihrem Smartphone zur RealUnit-App zurück.',
+      'already-completed.mobile': 'Diese Wallet-Adresse ist bereits auf Ihrem Konto.',
       'already-completed.cta': 'Zurück zur App',
       'invalid.title': 'Link ungültig oder abgelaufen',
       'invalid.body':
-        'Dieser Link ist ungültig oder bereits abgelaufen. Bitte fordern Sie in der App eine neue Zusammenlegung an.',
+        'Dieser Link ist ungültig oder bereits abgelaufen. Bitte fordern Sie in der App eine neue Bestätigung an.',
       'unavailable.title': 'Dienst vorübergehend nicht erreichbar',
       'unavailable.body':
-        'Wir konnten die Zusammenlegung gerade nicht abschliessen. Bitte versuchen Sie es in ein paar Minuten erneut.',
+        'Wir konnten die Adresse gerade nicht hinzufügen. Bitte versuchen Sie es in ein paar Minuten erneut.',
       'unavailable.cta': 'Erneut versuchen',
     },
     en: {
-      'doc.title': 'RealUnit — Account merge',
-      'doc.desc': 'Confirm the merge of your RealUnit accounts.',
-      'loading.title': 'Merging accounts…',
-      'loading.body': 'One moment — we’re merging your accounts.',
-      'confirmed.title': 'Accounts merged',
-      'confirmed.desktop': 'Your accounts are merged. Return to the RealUnit app on your phone.',
-      'confirmed.mobile': 'Your accounts are merged.',
+      'doc.title': 'RealUnit — Add address',
+      'doc.desc': 'Confirm adding a wallet address to your account.',
+      'loading.title': 'Adding address…',
+      'loading.body': 'One moment — we’re adding the wallet address to your account.',
+      'confirmed.title': 'Address added',
+      'confirmed.desktop':
+        'The wallet address has been added to your account. Return to the RealUnit app on your phone.',
+      'confirmed.mobile': 'The wallet address has been added to your account.',
       'confirmed.cta': 'Back to the app',
-      'already-completed.title': 'Already merged',
+      'already-completed.title': 'Address already added',
       'already-completed.desktop':
-        'These accounts are already merged. Return to the RealUnit app on your phone.',
-      'already-completed.mobile': 'These accounts are already merged.',
+        'This wallet address is already on your account. Return to the RealUnit app on your phone.',
+      'already-completed.mobile': 'This wallet address is already on your account.',
       'already-completed.cta': 'Back to the app',
       'invalid.title': 'Link invalid or expired',
       'invalid.body':
-        'This link is invalid or has already expired. Please request a new merge in the app.',
+        'This link is invalid or has already expired. Please request a new confirmation in the app.',
       'unavailable.title': 'Service temporarily unavailable',
       'unavailable.body':
-        'We couldn’t complete the merge right now. Please try again in a few minutes.',
+        'We couldn’t add the address right now. Please try again in a few minutes.',
       'unavailable.cta': 'Try again',
     },
   };

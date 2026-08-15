@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RealUnit — Accounts zusammenlegen</title>
-  <meta name="description" content="Bestätigung der Zusammenlegung Ihrer RealUnit-Accounts." />
+  <title>RealUnit — Adresse hinzufügen</title>
+  <meta name="description" content="Bestätigung, dass eine Wallet-Adresse Ihrem Konto hinzugefügt wird." />
   <meta name="theme-color" content="#1988C6" />
   <meta name="robots" content="noindex" />
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
@@ -85,8 +85,8 @@
       <!-- loading -->
       <div id="state-loading">
         <div class="icon icon--wait"><div class="spinner"></div></div>
-        <h1 data-i18n="loading.title">Zusammenlegung läuft…</h1>
-        <p data-i18n="loading.body">Einen Moment, wir legen Ihre Accounts zusammen.</p>
+        <h1 data-i18n="loading.title">Adresse wird hinzugefügt…</h1>
+        <p data-i18n="loading.body">Einen Moment, wir fügen die Wallet-Adresse Ihrem Konto hinzu.</p>
       </div>
 
       <!-- confirmed -->
@@ -94,16 +94,16 @@
         <div class="icon icon--ok">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
-        <h1 data-i18n="confirmed.title">Accounts zusammengelegt</h1>
+        <h1 data-i18n="confirmed.title">Adresse hinzugefügt</h1>
         <!-- Desktop / unknown: the custom URL scheme only resolves on the device
              that has the app installed, so a desktop can't act on it here — it is
              told to return to the app on the phone instead. -->
-        <p class="only-desktop" data-i18n="confirmed.desktop">Ihre Accounts sind zusammengelegt. Kehren Sie auf Ihrem Smartphone zur RealUnit-App zurück.</p>
+        <p class="only-desktop" data-i18n="confirmed.desktop">Die Wallet-Adresse ist Ihrem Konto hinzugefügt. Kehren Sie auf Ihrem Smartphone zur RealUnit-App zurück.</p>
         <!-- Phone: prominent hand-off back to the app via the fixed custom URL
              scheme the app registers. realunit.app claims no Universal/App Link, so
              this page always loads and confirms first; the button then re-opens the
              app. -->
-        <p class="only-mobile" data-i18n="confirmed.mobile">Ihre Accounts sind zusammengelegt.</p>
+        <p class="only-mobile" data-i18n="confirmed.mobile">Die Wallet-Adresse ist Ihrem Konto hinzugefügt.</p>
         <div class="only-mobile">
           <a class="btn" href="realunit-wallet://open" data-i18n="confirmed.cta">Zurück zur App</a>
         </div>
@@ -115,9 +115,9 @@
         <div class="icon icon--ok">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
-        <h1 data-i18n="already-completed.title">Zusammenlegung bereits erfolgt</h1>
-        <p class="only-desktop" data-i18n="already-completed.desktop">Diese Accounts sind bereits zusammengelegt. Kehren Sie auf Ihrem Smartphone zur RealUnit-App zurück.</p>
-        <p class="only-mobile" data-i18n="already-completed.mobile">Diese Accounts sind bereits zusammengelegt.</p>
+        <h1 data-i18n="already-completed.title">Adresse bereits hinzugefügt</h1>
+        <p class="only-desktop" data-i18n="already-completed.desktop">Diese Wallet-Adresse ist bereits auf Ihrem Konto. Kehren Sie auf Ihrem Smartphone zur RealUnit-App zurück.</p>
+        <p class="only-mobile" data-i18n="already-completed.mobile">Diese Wallet-Adresse ist bereits auf Ihrem Konto.</p>
         <div class="only-mobile">
           <a class="btn" href="realunit-wallet://open" data-i18n="already-completed.cta">Zurück zur App</a>
         </div>
@@ -129,7 +129,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>
         </div>
         <h1 data-i18n="invalid.title">Link ungültig oder abgelaufen</h1>
-        <p data-i18n="invalid.body">Dieser Link ist ungültig oder bereits abgelaufen. Bitte fordern Sie in der App eine neue Zusammenlegung an.</p>
+        <p data-i18n="invalid.body">Dieser Link ist ungültig oder bereits abgelaufen. Bitte fordern Sie in der App eine neue Bestätigung an.</p>
       </div>
 
       <!-- unavailable -->
@@ -138,7 +138,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>
         </div>
         <h1 data-i18n="unavailable.title">Dienst vorübergehend nicht erreichbar</h1>
-        <p data-i18n="unavailable.body">Wir konnten die Zusammenlegung gerade nicht abschliessen. Bitte versuchen Sie es in ein paar Minuten erneut.</p>
+        <p data-i18n="unavailable.body">Wir konnten die Adresse gerade nicht hinzufügen. Bitte versuchen Sie es in ein paar Minuten erneut.</p>
         <button id="retry" type="button" class="btn" data-i18n="unavailable.cta">Erneut versuchen</button>
       </div>
     </div>
