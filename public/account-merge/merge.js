@@ -86,6 +86,17 @@
   // First GET runs immediately so expectedSeconds <= 1 can still observe Complete;
   // the 1s interval applies only between subsequent polls.
   function pollJob(base, jobBody, otp) {
+    // Already-terminal ticket: re-confirm or fail immediately; never poll.
+    var initialStatus = jobBody && jobBody.status;
+    if (core.isJobTerminal(initialStatus)) {
+      if (initialStatus === 'Complete') {
+        fetchConfirm(base, otp, false);
+      } else {
+        render('unavailable');
+      }
+      return;
+    }
+
     var uid = jobBody.uid;
     var budgetSec =
       typeof jobBody.expectedSeconds === 'number' && jobBody.expectedSeconds > 0

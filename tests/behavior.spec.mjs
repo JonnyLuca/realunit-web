@@ -347,6 +347,72 @@ test.describe('account-merge flow', () => {
     expect(confirmCalls).toBe(2);
   });
 
+  test('a 202 ticket already Complete skips job polling and re-confirms', async ({ page }) => {
+    let confirmCalls = 0;
+    let jobCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls += 1;
+      if (confirmCalls === 1) {
+        route.fulfill({
+          status: 202,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            uid: 'job-1',
+            status: 'Complete',
+            expectedSeconds: 2,
+          }),
+        });
+      } else {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ kycHash: 'x' }),
+        });
+      }
+    });
+    await page.route(MERGE_JOB_ENDPOINT, (route) => {
+      jobCalls += 1;
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ uid: 'job-1', status: 'Complete' }),
+      });
+    });
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-confirmed')).toBeVisible({ timeout: 10000 });
+    expect(confirmCalls).toBe(2);
+    expect(jobCalls).toBe(0);
+  });
+
+  test('a 202 ticket already Failed skips job polling and shows unavailable', async ({ page }) => {
+    let confirmCalls = 0;
+    let jobCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls += 1;
+      route.fulfill({
+        status: 202,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          uid: 'job-1',
+          status: 'Failed',
+          expectedSeconds: 2,
+        }),
+      });
+    });
+    await page.route(MERGE_JOB_ENDPOINT, (route) => {
+      jobCalls += 1;
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ uid: 'job-1', status: 'Failed' }),
+      });
+    });
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-unavailable')).toBeVisible({ timeout: 10000 });
+    expect(confirmCalls).toBe(1);
+    expect(jobCalls).toBe(0);
+  });
+
   test('a 202 job with expectedSeconds 1 that is Complete on the first job GET still reaches confirmed', async ({
     page,
   }) => {
