@@ -248,3 +248,328 @@ test.describe('confirm-aktionariat flow', () => {
     expect(requestedUrl).toContain('https://api.example.test/v1/realunit/confirm-aktionariat');
   });
 });
+
+const MERGE_CONFIRM_ENDPOINT = '**/v1/auth/mail/confirm**';
+const MERGE_JOB_ENDPOINT = '**/v1/job/**';
+
+test.describe('account-merge flow', () => {
+  // The merge logic is device-agnostic; run it once on desktop.
+  test.beforeEach(async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chromium', 'desktop-only merge-flow checks');
+  });
+
+  test('a link without otp shows the invalid state and makes no confirm request', async ({
+    page,
+  }) => {
+    const confirmCalls = [];
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls.push(route.request().url());
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/account-merge/');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    await expect(page.locator('#state-loading')).toBeHidden();
+    expect(confirmCalls).toEqual([]);
+  });
+
+  for (const state of ['confirmed', 'already-completed', 'invalid', 'unavailable']) {
+    test(`?mock=${state} renders the ${state} state`, async ({ page }) => {
+      await page.goto(`/account-merge/?mock=${state}`);
+      await expect(page.locator(`#state-${state}`)).toBeVisible();
+    });
+  }
+
+  test('a valid otp confirmed by the API shows the confirmed state and calls the DEV base', async ({
+    page,
+  }) => {
+    let requestedUrl = null;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      requestedUrl = route.request().url();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ kycHash: 'x' }),
+      });
+    });
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-confirmed')).toBeVisible();
+    expect(requestedUrl).toContain('https://dev.api.dfx.swiss/v1/auth/mail/confirm');
+    expect(requestedUrl).toContain('code=abc');
+  });
+
+  test('a 409 response shows the already-completed state', async ({ page }) => {
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) =>
+      route.fulfill({ status: 409, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-already-completed')).toBeVisible();
+  });
+
+  test('a 400 response shows the invalid state', async ({ page }) => {
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) =>
+      route.fulfill({ status: 400, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+  });
+
+  test('a 202 job that completes then re-confirms shows the confirmed state', async ({ page }) => {
+    let confirmCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls += 1;
+      if (confirmCalls === 1) {
+        route.fulfill({
+          status: 202,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            uid: 'job-1',
+            status: 'Pending',
+            expectedSeconds: 2,
+          }),
+        });
+      } else {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ kycHash: 'x' }),
+        });
+      }
+    });
+    await page.route(MERGE_JOB_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ uid: 'job-1', status: 'Complete' }),
+      }),
+    );
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-confirmed')).toBeVisible({ timeout: 10000 });
+    expect(confirmCalls).toBe(2);
+  });
+
+  test('a 202 ticket already Complete skips job polling and re-confirms', async ({ page }) => {
+    let confirmCalls = 0;
+    let jobCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls += 1;
+      if (confirmCalls === 1) {
+        route.fulfill({
+          status: 202,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            uid: 'job-1',
+            status: 'Complete',
+            expectedSeconds: 2,
+          }),
+        });
+      } else {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ kycHash: 'x' }),
+        });
+      }
+    });
+    await page.route(MERGE_JOB_ENDPOINT, (route) => {
+      jobCalls += 1;
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ uid: 'job-1', status: 'Complete' }),
+      });
+    });
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-confirmed')).toBeVisible({ timeout: 10000 });
+    expect(confirmCalls).toBe(2);
+    expect(jobCalls).toBe(0);
+  });
+
+  test('a 202 ticket already Failed skips job polling and shows unavailable', async ({ page }) => {
+    let confirmCalls = 0;
+    let jobCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls += 1;
+      route.fulfill({
+        status: 202,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          uid: 'job-1',
+          status: 'Failed',
+          expectedSeconds: 2,
+        }),
+      });
+    });
+    await page.route(MERGE_JOB_ENDPOINT, (route) => {
+      jobCalls += 1;
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ uid: 'job-1', status: 'Failed' }),
+      });
+    });
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-unavailable')).toBeVisible({ timeout: 10000 });
+    expect(confirmCalls).toBe(1);
+    expect(jobCalls).toBe(0);
+  });
+
+  test('a 202 job with expectedSeconds 1 that is Complete on the first job GET still reaches confirmed', async ({
+    page,
+  }) => {
+    let confirmCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls += 1;
+      if (confirmCalls === 1) {
+        route.fulfill({
+          status: 202,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            uid: 'job-1',
+            status: 'Pending',
+            expectedSeconds: 1,
+          }),
+        });
+      } else {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ kycHash: 'x' }),
+        });
+      }
+    });
+    await page.route(MERGE_JOB_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ uid: 'job-1', status: 'Complete' }),
+      }),
+    );
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-confirmed')).toBeVisible({ timeout: 10000 });
+    expect(confirmCalls).toBe(2);
+  });
+
+  test('after Complete, a second confirm that returns another job-shaped 202 shows unavailable', async ({
+    page,
+  }) => {
+    let confirmCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      confirmCalls += 1;
+      if (confirmCalls === 1) {
+        route.fulfill({
+          status: 202,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            uid: 'job-1',
+            status: 'Pending',
+            expectedSeconds: 2,
+          }),
+        });
+      } else {
+        // Re-confirm after Complete still returns a job — that is an error, not a new budget.
+        route.fulfill({
+          status: 202,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            uid: 'job-2',
+            status: 'Pending',
+            expectedSeconds: 60,
+          }),
+        });
+      }
+    });
+    await page.route(MERGE_JOB_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ uid: 'job-1', status: 'Complete' }),
+      }),
+    );
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-unavailable')).toBeVisible({ timeout: 10000 });
+    expect(confirmCalls).toBe(2);
+  });
+
+  test('a job GET that returns 404 JSON without status shows unavailable without re-polling', async ({
+    page,
+  }) => {
+    let jobCalls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 202,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          uid: 'job-1',
+          status: 'Pending',
+          expectedSeconds: 60,
+        }),
+      }),
+    );
+    await page.route(MERGE_JOB_ENDPOINT, (route) => {
+      jobCalls += 1;
+      route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'not found' }),
+      });
+    });
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-unavailable')).toBeVisible({ timeout: 10000 });
+    expect(jobCalls).toBe(1);
+  });
+
+  test('a network error shows the unavailable state', async ({ page }) => {
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => route.abort());
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+  });
+
+  test('a 503 response shows the unavailable state', async ({ page }) => {
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) =>
+      route.fulfill({ status: 503, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+  });
+
+  test('the retry button re-runs the confirmation', async ({ page }) => {
+    let calls = 0;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      calls += 1;
+      const ok = calls > 1; // first attempt fails, the retry succeeds
+      route.fulfill({
+        status: ok ? 200 : 503,
+        contentType: 'application/json',
+        body: JSON.stringify(ok ? { kycHash: 'x' } : {}),
+      });
+    });
+    await page.goto('/account-merge/?otp=abc');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await page.locator('#retry').click();
+    await expect(page.locator('#state-confirmed')).toBeVisible();
+    expect(calls).toBe(2);
+  });
+
+  test('?lang=en renders English copy and sets <html lang="en">', async ({ page }) => {
+    await page.goto('/account-merge/?mock=invalid&lang=en');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    const expected = await page.evaluate(() => window.RealUnitMerge.I18N.en['invalid.title']);
+    await expect(page.locator('#state-invalid h1')).toHaveText(expected);
+  });
+
+  test('an ?api= override sends the confirmation to that API base', async ({ page }) => {
+    let requestedUrl = null;
+    await page.route(MERGE_CONFIRM_ENDPOINT, (route) => {
+      requestedUrl = route.request().url();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ kycHash: 'x' }),
+      });
+    });
+    await page.goto('/account-merge/?otp=abc&api=https%3A%2F%2Fapi.example.test');
+    await expect(page.locator('#state-confirmed')).toBeVisible();
+    expect(requestedUrl).toContain('https://api.example.test/v1/auth/mail/confirm');
+    expect(requestedUrl).toContain('code=abc');
+  });
+});
