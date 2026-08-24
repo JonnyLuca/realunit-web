@@ -68,6 +68,28 @@ createServer((request, response) => {
   const filePath = resolveRequestPath(request.url || '/');
 
   if (!filePath || !existsSync(filePath) || !statSync(filePath).isFile()) {
+    const pathname = decodeURIComponent(
+      new URL(request.url || '/', `http://127.0.0.1:${port}`).pathname,
+    );
+    if (pathname.startsWith('/invite/')) {
+      request.url = '/invite/index.html';
+    } else if (pathname.startsWith('/promo/')) {
+      request.url = '/promo/index.html';
+    }
+    if (request.url === '/invite/index.html' || request.url === '/promo/index.html') {
+      const rewritten = resolveRequestPath(request.url);
+      if (rewritten && existsSync(rewritten) && statSync(rewritten).isFile()) {
+        response.writeHead(200, {
+          'content-type': mimeTypes.get(extname(rewritten)) || 'application/octet-stream',
+        });
+        if (request.method === 'HEAD') {
+          response.end();
+          return;
+        }
+        createReadStream(rewritten).pipe(response);
+        return;
+      }
+    }
     sendNotFound(response);
     return;
   }

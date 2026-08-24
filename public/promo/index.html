@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RealUnit — Promo-Code</title>
+  <meta name="description" content="Öffne die RealUnit-App mit diesem Code." />
+  <meta name="theme-color" content="#1988C6" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <script src="/js/lib/platform-core.js"></script>
+  <script src="/platform.js"></script>
+  <script src="/js/lib/invite-core.js"></script>
+  <style>
+    :root { --bg: #f2f6fa; --blue: #1988C6; --ink: #343233; --muted: #647488; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+      padding: clamp(16px, 4vw, 48px);
+    }
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: clamp(28px, 6vw, 44px) clamp(22px, 5vw, 40px);
+      text-align: center;
+    }
+    h1 { font-size: 1.4rem; margin: 0 0 10px; }
+    p { color: var(--muted); line-height: 1.55; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 100%; padding: 14px 20px; border: 0; border-radius: 12px;
+      background: var(--blue); color: #fff; font-size: 1rem; font-weight: 600;
+      text-decoration: none; cursor: pointer;
+    }
+    .only-mobile { display: none; }
+    html[data-platform] .only-mobile { display: block; }
+    html[data-platform] .only-desktop { display: none; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <section id="state-loading">
+      <h1 id="loading-title">Einladung wird geladen…</h1>
+      <p id="loading-body">Einen Moment bitte.</p>
+    </section>
+    <section id="state-ok" hidden>
+      <h1 id="ok-title">Promo-Code</h1>
+      <p id="ok-body">Die App übernimmt den Code automatisch.</p>
+      <p class="only-desktop" id="ok-desktop"></p>
+      <p class="only-mobile"><a class="btn" id="ok-cta" href="realunit-wallet://open">In der App öffnen</a></p>
+    </section>
+    <section id="state-invalid" hidden>
+      <h1 id="invalid-title">Link ungültig oder abgelaufen</h1>
+      <p id="invalid-body">Dieser Einladungs- oder Promo-Link ist ungültig oder bereits abgelaufen.</p>
+    </section>
+    <section id="state-unavailable" hidden>
+      <h1 id="unavailable-title">Dienst vorübergehend nicht erreichbar</h1>
+      <p id="unavailable-body">Wir konnten den Code gerade nicht prüfen. Bitte versuche es später erneut.</p>
+      <button class="btn" type="button" id="unavailable-cta">Erneut versuchen</button>
+    </section>
+  </main>
+  <script src="/invite/invite.js"></script>
+</body>
+</html>

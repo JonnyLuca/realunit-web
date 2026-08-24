@@ -573,3 +573,68 @@ test.describe('account-merge flow', () => {
     expect(requestedUrl).toContain('code=abc');
   });
 });
+
+const REFERRAL_CODE_ENDPOINT = '**/v1/realunit/referral/code/**';
+
+test.describe('invite and promo landing', () => {
+  test.beforeEach(async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chromium', 'desktop-only invite-flow checks');
+  });
+
+  test('an invite path without a code is invalid and does not call the API', async ({ page }) => {
+    const calls = [];
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      calls.push(route.request().url());
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/invite/');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    expect(calls).toEqual([]);
+  });
+
+  test('a successful invite lookup shows the greeting and the custom-scheme CTA', async ({
+    page,
+  }) => {
+    let requestedUrl = null;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      requestedUrl = route.request().url();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+          actionText: '',
+        }),
+      });
+    });
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    expect(requestedUrl).toContain('/v1/realunit/referral/code/AB12CD');
+    await expect(page.locator('#ok-cta')).toHaveAttribute(
+      'href',
+      'realunit-wallet://invite/AB12CD',
+    );
+  });
+
+  test('a 404 invite is invalid; a 500 is unavailable', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({ status: 404, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/invite/NOPE');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+  });
+
+  test('a promo path renders the API action text 1:1', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ kind: 'promo', actionText: '20 REALU extra' }),
+      }),
+    );
+    await page.goto('/promo/EVT1');
+    await expect(page.locator('#ok-body')).toHaveText('20 REALU extra');
+  });
+});

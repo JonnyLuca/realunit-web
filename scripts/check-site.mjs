@@ -135,6 +135,7 @@ for (const file of htmlFiles) {
   checkScriptOrder(label, html, '/platform.js', '/js/lib/platform-core.js');
   checkScriptOrder(label, html, '/confirm-aktionariat/confirm.js', '/js/lib/confirm-core.js');
   checkScriptOrder(label, html, '/account-merge/merge.js', '/js/lib/merge-core.js');
+  checkScriptOrder(label, html, '/invite/invite.js', '/js/lib/invite-core.js');
 }
 
 if (errors.length > 0) {

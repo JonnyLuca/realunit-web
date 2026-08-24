@@ -20,3 +20,9 @@
 
 /js/*
   Cache-Control: public, max-age=3600
+
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+
+/.well-known/assetlinks.json
+  Content-Type: application/json
