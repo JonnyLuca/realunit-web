@@ -11,6 +11,8 @@ const {
   parseCodeFromPath,
   buildLookupUrl,
   appLink,
+  appStoreUrl,
+  playStoreUrl,
   interpolate,
   mapResult,
 } = core;
@@ -100,6 +102,19 @@ describe('URLs', () => {
 
   test('builds the custom-scheme app link', () => {
     expect(appLink('invite', 'AB12')).toBe('realunit-wallet://invite/AB12');
+  });
+
+  test('playStoreUrl appends an install referrer when a code is present', () => {
+    expect(playStoreUrl('AB12CD')).toBe(
+      'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=invite%3DAB12CD',
+    );
+    expect(playStoreUrl('')).toBe(
+      'https://play.google.com/store/apps/details?id=swiss.realunit.app',
+    );
+  });
+
+  test('appStoreUrl is the App Store listing', () => {
+    expect(appStoreUrl()).toBe('https://apps.apple.com/ch/app/realunit/id6759720010');
   });
 });
 

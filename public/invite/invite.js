@@ -45,6 +45,12 @@
   var appHref = core.appLink(parsed.kind, parsed.code);
   var cta = document.getElementById('ok-cta');
   if (cta) cta.setAttribute('href', appHref);
+  document.querySelectorAll('a[data-store="apple"]').forEach(function (el) {
+    el.setAttribute('href', core.appStoreUrl());
+  });
+  document.querySelectorAll('a[data-store="play"]').forEach(function (el) {
+    el.setAttribute('href', core.playStoreUrl(parsed.code));
+  });
 
   function render(result) {
     if (result.state === 'invalid') {

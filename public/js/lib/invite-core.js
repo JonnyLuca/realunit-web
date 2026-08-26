@@ -7,6 +7,8 @@
 
   var SUPPORTED_LANGS = ['de', 'en'];
   var REALUNIT_HOSTS = ['realunit.app', 'www.realunit.app', 'dev.realunit.app'];
+  var APP_STORE_URL = 'https://apps.apple.com/ch/app/realunit/id6759720010';
+  var PLAY_STORE_BASE = 'https://play.google.com/store/apps/details?id=swiss.realunit.app';
 
   var I18N = {
     de: {
@@ -20,6 +22,11 @@
       'promo.title': 'Promo-Code',
       cta: 'In der App öffnen',
       'cta.desktop': 'Öffne diesen Link auf deinem Smartphone, um die App zu starten.',
+      'stores.nav': 'App herunterladen',
+      'stores.apple.aria': 'RealUnit im App Store laden',
+      'stores.apple.alt': 'Laden im App Store',
+      'stores.play.aria': 'RealUnit jetzt bei Google Play',
+      'stores.play.alt': 'Jetzt bei Google Play',
       'invalid.title': 'Link ungültig oder abgelaufen',
       'invalid.body': 'Dieser Einladungs- oder Promo-Link ist ungültig oder bereits abgelaufen.',
       'unavailable.title': 'Dienst vorübergehend nicht erreichbar',
@@ -38,6 +45,11 @@
       'promo.title': 'Promo code',
       cta: 'Open in the app',
       'cta.desktop': 'Open this link on your phone to launch the app.',
+      'stores.nav': 'Download the app',
+      'stores.apple.aria': 'Get RealUnit on the App Store',
+      'stores.apple.alt': 'Download on the App Store',
+      'stores.play.aria': 'Get RealUnit on Google Play',
+      'stores.play.alt': 'Get it on Google Play',
       'invalid.title': 'Link invalid or expired',
       'invalid.body': 'This invitation or promo link is invalid or has expired.',
       'unavailable.title': 'Service temporarily unavailable',
@@ -94,6 +106,19 @@
     return 'realunit-wallet://' + kind + '/' + encodeURIComponent(code);
   }
 
+  function appStoreUrl() {
+    return APP_STORE_URL;
+  }
+
+  // Play Store URL. A code is attached as install referrer so Android can
+  // keep it across a fresh install (`invite=<code>`).
+  function playStoreUrl(code) {
+    if (code) {
+      return PLAY_STORE_BASE + '&referrer=' + encodeURIComponent('invite=' + code);
+    }
+    return PLAY_STORE_BASE;
+  }
+
   function interpolate(template, values) {
     return String(template).replace(/\{(\w+)\}/g, function (_, key) {
       return values[key] == null ? '' : String(values[key]);
@@ -117,6 +142,8 @@
     parseCodeFromPath: parseCodeFromPath,
     buildLookupUrl: buildLookupUrl,
     appLink: appLink,
+    appStoreUrl: appStoreUrl,
+    playStoreUrl: playStoreUrl,
     interpolate: interpolate,
     mapResult: mapResult,
   };

@@ -43,6 +43,14 @@
       background: var(--blue); color: #fff; font-size: 1rem; font-weight: 600;
       text-decoration: none; cursor: pointer;
     }
+    .stores {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+      gap: 12px 16px; margin-top: 20px;
+    }
+    .store-link { display: inline-flex; border-radius: 10px; }
+    .store-badge { display: block; width: auto; }
+    .store-badge--apple { height: 40px; }
+    .store-badge--play { height: calc(40px * 68 / 52); }
     .only-mobile { display: none; }
     html[data-platform] .only-mobile { display: block; }
     html[data-platform] .only-desktop { display: none; }
@@ -60,6 +68,14 @@
       <p id="ok-body">Die App übernimmt den Code automatisch.</p>
       <p class="only-desktop" id="ok-desktop"></p>
       <p class="only-mobile"><a class="btn" id="ok-cta" href="realunit-wallet://open">In der App öffnen</a></p>
+      <nav class="stores" aria-label="App herunterladen">
+        <a class="store-link" data-store="apple" href="https://apps.apple.com/ch/app/realunit/id6759720010" target="_blank" rel="noopener" aria-label="RealUnit im App Store laden">
+          <img class="store-badge store-badge--apple" src="/assets/badge-app-store.svg" width="120" height="40" alt="Laden im App Store" decoding="async" />
+        </a>
+        <a class="store-link" data-store="play" href="https://play.google.com/store/apps/details?id=swiss.realunit.app" target="_blank" rel="noopener" aria-label="RealUnit jetzt bei Google Play">
+          <img class="store-badge store-badge--play" src="/assets/badge-google-play.png" width="646" height="250" alt="Jetzt bei Google Play" decoding="async" />
+        </a>
+      </nav>
     </section>
     <section id="state-invalid" hidden>
       <h1 id="invalid-title">Link ungültig oder abgelaufen</h1>

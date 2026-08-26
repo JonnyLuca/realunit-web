@@ -616,6 +616,14 @@ test.describe('invite and promo landing', () => {
       'href',
       'realunit-wallet://invite/AB12CD',
     );
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'href',
+      'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=invite%3DAB12CD',
+    );
+    await expect(page.locator('a[data-store="apple"]')).toHaveAttribute(
+      'href',
+      'https://apps.apple.com/ch/app/realunit/id6759720010',
+    );
   });
 
   test('a 404 invite is invalid; a 500 is unavailable', async ({ page }) => {
