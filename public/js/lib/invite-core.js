@@ -213,8 +213,26 @@
     return /^Cannot (GET|POST|PUT|PATCH|DELETE) /i.test(routeMissingMessage(body));
   }
 
+  function hasLookupMarker(body) {
+    var markers = [
+      'kind',
+      'inviterName',
+      'inviteeName',
+      'campaignText',
+      'actionText',
+      'actionTextEn',
+      'campaignTextEn',
+    ];
+    for (var i = 0; i < markers.length; i++) {
+      var value = body[markers[i]];
+      if (typeof value === 'string' && value.trim()) return true;
+    }
+    return false;
+  }
+
   function unwrapLookup(body) {
     if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
+    if (hasLookupMarker(body)) return body;
     var keys = ['data', 'item', 'result', 'payload'];
     for (var i = 0; i < keys.length; i++) {
       var inner = body[keys[i]];

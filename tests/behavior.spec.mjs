@@ -637,6 +637,25 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
   });
 
+  test('a sibling data object does not hide invite greeting fields', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+          data: { kind: 'promo', actionText: 'ignore' },
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+    await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
+  });
+
   test('a successful invite lookup shows the greeting and the custom-scheme CTA', async ({
     page,
   }) => {

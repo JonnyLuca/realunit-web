@@ -245,6 +245,13 @@ describe('mapResult', () => {
     expect(mapResult(200, { payload: { kind: 'invite' } }).state).toBe('invite');
     expect(mapResult(200, { data: ['not-a-map'], kind: 'invite' }).state).toBe('invite');
     expect(mapResult(200, { data: 12, kind: 'invite' }).state).toBe('invite');
+    expect(
+      mapResult(200, {
+        kind: 'invite',
+        inviterName: 'Björn',
+        data: { kind: 'promo' },
+      }).payload.inviterName,
+    ).toBe('Björn');
     expect(mapResult(200, [])).toEqual({ state: 'unavailable' });
     expect(mapResult(200, 'missing')).toEqual({ state: 'unavailable' });
   });
