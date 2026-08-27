@@ -92,6 +92,13 @@ describe('parseCodeFromPath', () => {
     expect(parseCodeFromPath('/other/AB12CD')).toBeNull();
     expect(parseCodeFromPath(null)).toBeNull();
   });
+
+  test('decodes a percent-encoded path segment', () => {
+    expect(parseCodeFromPath('/invite/AB%2F12')).toEqual({
+      kind: 'invite',
+      code: 'AB/12',
+    });
+  });
 });
 
 describe('URLs', () => {

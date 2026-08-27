@@ -103,6 +103,12 @@
     var kind = parts[0].toLowerCase();
     var code = parts[1];
     if (kind !== 'invite' && kind !== 'promo') return null;
+    try {
+      code = decodeURIComponent(code);
+    } catch (e) {
+      // keep the raw segment
+    }
+    if (!code) return null;
     return { kind: kind, code: code };
   }
 
