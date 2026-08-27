@@ -77,6 +77,14 @@
   var cta = document.getElementById('ok-cta');
   if (cta) cta.setAttribute('href', appHref);
   setMeta('meta[name="apple-itunes-app"]', core.itunesBanner(parsed.kind, parsed.code));
+  var androidAlt = document.querySelector('link[rel="alternate"][data-android-app]');
+  if (!androidAlt) {
+    androidAlt = document.createElement('link');
+    androidAlt.setAttribute('rel', 'alternate');
+    androidAlt.setAttribute('data-android-app', '');
+    document.head.appendChild(androidAlt);
+  }
+  androidAlt.setAttribute('href', core.androidAppUrl(parsed.kind, parsed.code));
   document.querySelectorAll('a[data-store="apple"]').forEach(function (el) {
     el.setAttribute('href', core.appStoreUrl());
   });

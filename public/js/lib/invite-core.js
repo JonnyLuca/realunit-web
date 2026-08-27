@@ -221,6 +221,14 @@
     return appLink(kind, code);
   }
 
+  // Indexed / share-sheet App Link. The app parses this as
+  // android-app://swiss.realunit.app/https/realunit.app/invite|promo/{code}.
+  function androidAppUrl(kind, code) {
+    return (
+      'android-app://swiss.realunit.app/https/realunit.app/' + kind + '/' + encodeURIComponent(code)
+    );
+  }
+
   function interpolate(template, values) {
     return String(template).replace(/\{(\w+)\}/g, function (_, key) {
       return values[key] == null ? '' : String(values[key]);
@@ -339,6 +347,7 @@
     playStoreUrl: playStoreUrl,
     androidIntentUrl: androidIntentUrl,
     openInAppUrl: openInAppUrl,
+    androidAppUrl: androidAppUrl,
     interpolate: interpolate,
     mapResult: mapResult,
     promoBody: promoBody,
