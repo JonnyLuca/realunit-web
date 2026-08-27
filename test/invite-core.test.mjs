@@ -108,6 +108,9 @@ describe('URLs', () => {
     expect(playStoreUrl('AB12CD')).toBe(
       'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=invite%3DAB12CD',
     );
+    expect(playStoreUrl('EVT1', 'promo')).toBe(
+      'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=promo%3DEVT1',
+    );
     expect(playStoreUrl('')).toBe(
       'https://play.google.com/store/apps/details?id=swiss.realunit.app',
     );
@@ -131,10 +134,17 @@ describe('mapResult', () => {
 
 describe('interpolate and i18n parity', () => {
   test('fills named placeholders', () => {
-    expect(interpolate('Hey {invitee}, {inviter}', { invitee: 'Alice', inviter: 'Björn' })).toBe(
-      'Hey Alice, Björn',
+    expect(interpolate('Hey {invitee}', { invitee: 'Alice' })).toBe('Hey Alice');
+    expect(interpolate('{inviter} lädt dich ein', { inviter: 'Björn' })).toBe(
+      'Björn lädt dich ein',
     );
     expect(interpolate('Hey {invitee}', {})).toBe('Hey ');
+  });
+
+  test('de invite copy uses Hey {invitee} and a separate inviter line', () => {
+    expect(I18N.de['invite.title']).toBe('Hey {invitee}');
+    expect(I18N.de['invite.body']).toBe('{inviter} lädt dich ein zu RealUnit.');
+    expect(I18N.de.retap).toMatch(/nochmals antippen/);
   });
 
   test('de and en expose the same keys', () => {

@@ -612,6 +612,8 @@ test.describe('invite and promo landing', () => {
     await page.goto('/invite/AB12CD');
     await expect(page.locator('#state-ok')).toBeVisible();
     expect(requestedUrl).toContain('/v1/realunit/referral/code/AB12CD');
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+    await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
     await expect(page.locator('#ok-cta')).toHaveAttribute(
       'href',
       'realunit-wallet://invite/AB12CD',
@@ -644,5 +646,9 @@ test.describe('invite and promo landing', () => {
     );
     await page.goto('/promo/EVT1');
     await expect(page.locator('#ok-body')).toHaveText('20 REALU extra');
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'href',
+      'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=promo%3DEVT1',
+    );
   });
 });

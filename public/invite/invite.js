@@ -24,8 +24,9 @@
   }
 
   document.documentElement.lang = lang;
-  document.title = copy['doc.title.invite'];
-  setText('loading-title', copy['loading.title']);
+  var isPromoPath = parsed && parsed.kind === 'promo';
+  document.title = isPromoPath ? copy['doc.title.promo'] : copy['doc.title.invite'];
+  setText('loading-title', isPromoPath ? copy['loading.title.promo'] : copy['loading.title']);
   setText('loading-body', copy['loading.body']);
   setText('invalid-title', copy['invalid.title']);
   setText('invalid-body', copy['invalid.body']);
@@ -34,6 +35,8 @@
   setText('unavailable-cta', copy['unavailable.cta']);
   setText('ok-cta', copy['cta']);
   setText('ok-desktop', copy['cta.desktop']);
+  setText('ok-pitch', copy['invite.pitch']);
+  setText('ok-retap', copy['retap']);
 
   if (!parsed) {
     show('state-invalid');
@@ -49,7 +52,7 @@
     el.setAttribute('href', core.appStoreUrl());
   });
   document.querySelectorAll('a[data-store="play"]').forEach(function (el) {
-    el.setAttribute('href', core.playStoreUrl(parsed.code));
+    el.setAttribute('href', core.playStoreUrl(parsed.code, parsed.kind));
   });
 
   function render(result) {
@@ -65,15 +68,20 @@
     if (result.state === 'promo') {
       document.title = copy['doc.title.promo'];
       setText('ok-title', copy['promo.title']);
-      setText('ok-body', payload.actionText || '');
+      setText('ok-body', payload.actionText || payload.campaignText || '');
     } else {
       document.title = copy['doc.title.invite'];
-      setText('ok-title', copy['invite.title']);
+      var invitee = payload.inviteeName || '';
+      setText(
+        'ok-title',
+        invitee
+          ? core.interpolate(copy['invite.title'], { invitee: invitee })
+          : copy['invite.title.fallback'],
+      );
       setText(
         'ok-body',
         payload.actionText ||
           core.interpolate(copy['invite.body'], {
-            invitee: payload.inviteeName || '',
             inviter: payload.inviterName || '',
           }),
       );

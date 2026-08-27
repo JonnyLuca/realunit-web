@@ -17,9 +17,14 @@
       'doc.desc': 'Öffne die RealUnit-App mit diesem Code.',
       'loading.title': 'Einladung wird geladen…',
       'loading.body': 'Einen Moment bitte.',
-      'invite.title': 'Du bist eingeladen',
-      'invite.body': 'Hey {invitee}, {inviter} lädt dich ein zu RealUnit.',
+      'loading.title.promo': 'Promo-Code wird geladen…',
+      'invite.title': 'Hey {invitee}',
+      'invite.title.fallback': 'Du bist eingeladen',
+      'invite.body': '{inviter} lädt dich ein zu RealUnit.',
+      'invite.pitch': 'Werde Aktionärin der RealUnit Schweiz AG, direkt in deinem eigenen Wallet.',
       'promo.title': 'Promo-Code',
+      retap:
+        'App schon installiert? Dann öffnet dieser Link sie direkt. Nach einer Neu-Installation: Link einfach nochmals antippen.',
       cta: 'In der App öffnen',
       'cta.desktop': 'Öffne diesen Link auf deinem Smartphone, um die App zu starten.',
       'stores.nav': 'App herunterladen',
@@ -40,9 +45,14 @@
       'doc.desc': 'Open the RealUnit app with this code.',
       'loading.title': 'Loading invitation…',
       'loading.body': 'One moment.',
-      'invite.title': 'You are invited',
-      'invite.body': 'Hey {invitee}, {inviter} is inviting you to RealUnit.',
+      'loading.title.promo': 'Loading promo code…',
+      'invite.title': 'Hey {invitee}',
+      'invite.title.fallback': 'You are invited',
+      'invite.body': '{inviter} is inviting you to RealUnit.',
+      'invite.pitch': 'Become a shareholder of RealUnit Schweiz AG, in your own wallet.',
       'promo.title': 'Promo code',
+      retap:
+        'App already installed? This link opens it directly. After a fresh install, tap the link again.',
       cta: 'Open in the app',
       'cta.desktop': 'Open this link on your phone to launch the app.',
       'stores.nav': 'Download the app',
@@ -111,10 +121,11 @@
   }
 
   // Play Store URL. A code is attached as install referrer so Android can
-  // keep it across a fresh install (`invite=<code>`).
-  function playStoreUrl(code) {
+  // keep it across a fresh install (`invite=<code>` or `promo=<code>`).
+  function playStoreUrl(code, kind) {
     if (code) {
-      return PLAY_STORE_BASE + '&referrer=' + encodeURIComponent('invite=' + code);
+      var key = kind === 'promo' ? 'promo' : 'invite';
+      return PLAY_STORE_BASE + '&referrer=' + encodeURIComponent(key + '=' + code);
     }
     return PLAY_STORE_BASE;
   }
