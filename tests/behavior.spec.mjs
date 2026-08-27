@@ -590,6 +590,11 @@ test.describe('invite and promo landing', () => {
     await page.goto('/invite/');
     await expect(page.locator('#state-invalid')).toBeVisible();
     expect(calls).toEqual([]);
+    await page.goto('/invite');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    await page.goto('/promo');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    expect(calls).toEqual([]);
   });
 
   test('a successful invite lookup shows the greeting and the custom-scheme CTA', async ({

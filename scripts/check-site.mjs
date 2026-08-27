@@ -232,6 +232,31 @@ if (!existsSync(headersPath)) {
   );
 }
 
+const redirectsPath = join(PUBLIC, '_redirects');
+if (!existsSync(redirectsPath)) {
+  fail('public/_redirects is missing');
+} else {
+  const rules = read(redirectsPath)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith('#'))
+    .map((line) => line.split(/\s+/));
+  const hasRewrite = (from, to) =>
+    rules.some((parts) => parts[0] === from && parts[1] === to && parts[2] === '200');
+  if (!hasRewrite('/invite', '/invite/index.html')) {
+    fail('_redirects: missing /invite → /invite/index.html 200');
+  }
+  if (!hasRewrite('/invite/*', '/invite/index.html')) {
+    fail('_redirects: missing /invite/* → /invite/index.html 200');
+  }
+  if (!hasRewrite('/promo', '/promo/index.html')) {
+    fail('_redirects: missing /promo → /promo/index.html 200');
+  }
+  if (!hasRewrite('/promo/*', '/promo/index.html')) {
+    fail('_redirects: missing /promo/* → /promo/index.html 200');
+  }
+}
+
 const assetlinksPath = join(PUBLIC, '.well-known', 'assetlinks.json');
 if (!existsSync(assetlinksPath)) {
   fail('public/.well-known/assetlinks.json is missing');

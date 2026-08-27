@@ -71,9 +71,9 @@ createServer((request, response) => {
     const pathname = decodeURIComponent(
       new URL(request.url || '/', `http://127.0.0.1:${port}`).pathname,
     );
-    if (pathname.startsWith('/invite/')) {
+    if (pathname === '/invite' || pathname.startsWith('/invite/')) {
       request.url = '/invite/index.html';
-    } else if (pathname.startsWith('/promo/')) {
+    } else if (pathname === '/promo' || pathname.startsWith('/promo/')) {
       request.url = '/promo/index.html';
     }
     if (request.url === '/invite/index.html' || request.url === '/promo/index.html') {
