@@ -8,7 +8,14 @@ export const PORT = 4173;
 // Every public HTML page, used by the smoke spec. `/confirm-aktionariat/` and
 // `/account-merge/` load with no query params, so they render the "invalid link"
 // state without making a network request.
-export const PAGES = ['/', '/confirm-aktionariat/', '/account-merge/', '/404.html'];
+export const PAGES = [
+  '/',
+  '/confirm-aktionariat/',
+  '/account-merge/',
+  '/404.html',
+  '/invite/AB12CD?mock=1',
+  '/promo/EVT1?mock=1',
+];
 
 // Viewports the visual suite renders: desktop, a real tablet width, and a phone.
 export const PROJECTS = ['desktop-chromium', 'tablet-chromium', 'mobile-safari'];
