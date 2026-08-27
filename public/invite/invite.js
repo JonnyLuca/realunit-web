@@ -143,6 +143,8 @@
     fetch(url, {
       method: 'GET',
       headers: { Accept: 'application/json' },
+      cache: 'no-store',
+      credentials: 'omit',
       signal: controller.signal,
     })
       .then(function (res) {
