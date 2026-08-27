@@ -99,6 +99,11 @@ describe('parseCodeFromPath', () => {
       code: 'AB/12',
     });
   });
+
+  test('caps the code at 256 characters', () => {
+    const long = 'A'.repeat(300);
+    expect(parseCodeFromPath(`/invite/${long}`).code).toHaveLength(256);
+  });
 });
 
 describe('URLs', () => {

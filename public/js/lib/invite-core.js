@@ -109,6 +109,7 @@
       // keep the raw segment
     }
     if (!code) return null;
+    if (code.length > 256) code = code.slice(0, 256);
     return { kind: kind, code: code };
   }
 
