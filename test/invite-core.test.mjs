@@ -93,6 +93,10 @@ describe('parseCodeFromPath', () => {
       kind: 'invite',
       code: 'AB12CD',
     });
+    expect(parseCodeFromPath('/PROMO/EVT1/extra')).toEqual({
+      kind: 'promo',
+      code: 'EVT1',
+    });
   });
 
   test('rejects incomplete or unknown paths', () => {
@@ -185,6 +189,10 @@ describe('promoBody', () => {
   test('EN ignores empty campaignTextEn', () => {
     expect(promoBody({ campaignTextEn: '', actionText: 'DE action' }, 'en')).toBe('DE action');
   });
+
+  test('empty payload yields an empty string for the landing fallback', () => {
+    expect(promoBody({}, 'de')).toBe('');
+  });
 });
 
 describe('lookup fetch', () => {
@@ -218,6 +226,7 @@ describe('interpolate and i18n parity', () => {
     expect(I18N.de['invite.title']).toBe('Hey {invitee}');
     expect(I18N.de['invite.body']).toBe('{inviter} lädt dich ein zu RealUnit.');
     expect(I18N.de['invite.body.fallback']).toBe('Du bist zu RealUnit eingeladen.');
+    expect(I18N.de['promo.body.fallback']).toMatch(/Promo-Code/);
     expect(I18N.de.retap).toMatch(/nochmals antippen/);
   });
 

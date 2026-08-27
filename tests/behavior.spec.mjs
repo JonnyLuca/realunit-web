@@ -745,6 +745,20 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#ok-body')).toHaveText('EN campaign');
   });
 
+  test('a promo payload without action text uses the fallback body', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ kind: 'promo' }),
+      }),
+    );
+    await page.goto('/promo/EVT1');
+    await expect(page.locator('#ok-body')).toHaveText(
+      'Öffne die App, um den Promo-Code zu übernehmen.',
+    );
+  });
+
   test('?mock=1 does not call the API and greets the invitee', async ({ page }) => {
     const calls = [];
     await page.route(REFERRAL_CODE_ENDPOINT, (route) => {

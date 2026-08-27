@@ -24,6 +24,7 @@
       'invite.body.fallback': 'Du bist zu RealUnit eingeladen.',
       'invite.pitch': 'Werde Aktionärin der RealUnit Schweiz AG, direkt in deinem eigenen Wallet.',
       'promo.title': 'Promo-Code',
+      'promo.body.fallback': 'Öffne die App, um den Promo-Code zu übernehmen.',
       retap:
         'App schon installiert? Dann öffnet dieser Link sie direkt. Nach einer Neu-Installation: Link einfach nochmals antippen.',
       cta: 'In der App öffnen',
@@ -53,6 +54,7 @@
       'invite.body.fallback': 'You are invited to RealUnit.',
       'invite.pitch': 'Become a shareholder of RealUnit Schweiz AG, in your own wallet.',
       'promo.title': 'Promo code',
+      'promo.body.fallback': 'Open the app to apply this promo code.',
       retap:
         'App already installed? This link opens it directly. After a fresh install, tap the link again.',
       cta: 'Open in the app',

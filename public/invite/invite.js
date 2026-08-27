@@ -84,7 +84,8 @@
     if (result.state === 'promo') {
       document.title = copy['doc.title.promo'];
       setText('ok-title', copy['promo.title']);
-      setText('ok-body', core.promoBody(payload, lang));
+      var promoText = String(core.promoBody(payload, lang) || '').trim();
+      setText('ok-body', promoText || copy['promo.body.fallback']);
     } else {
       document.title = copy['doc.title.invite'];
       var invitee = String(payload.inviteeName || '').trim();
