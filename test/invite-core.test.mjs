@@ -13,6 +13,7 @@ const {
   buildLookupUrl,
   appLink,
   appStoreUrl,
+  itunesBanner,
   playStoreUrl,
   interpolate,
   mapResult,
@@ -206,6 +207,16 @@ describe('URLs', () => {
 
   test('appStoreUrl is the App Store listing', () => {
     expect(appStoreUrl()).toBe('https://apps.apple.com/ch/app/realunit/id6759720010');
+  });
+
+  test('itunesBanner carries the custom-scheme app-argument when a code is present', () => {
+    expect(itunesBanner()).toBe('app-id=6759720010');
+    expect(itunesBanner('invite', 'AB12CD')).toBe(
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+    expect(itunesBanner('promo', 'EVT1')).toBe(
+      'app-id=6759720010, app-argument=realunit-wallet://promo/EVT1',
+    );
   });
 });
 

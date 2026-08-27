@@ -72,6 +72,7 @@
   var appHref = core.appLink(parsed.kind, parsed.code);
   var cta = document.getElementById('ok-cta');
   if (cta) cta.setAttribute('href', appHref);
+  setMeta('meta[name="apple-itunes-app"]', core.itunesBanner(parsed.kind, parsed.code));
   document.querySelectorAll('a[data-store="apple"]').forEach(function (el) {
     el.setAttribute('href', core.appStoreUrl());
   });

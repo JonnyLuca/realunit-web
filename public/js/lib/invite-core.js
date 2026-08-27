@@ -7,7 +7,8 @@
 
   var SUPPORTED_LANGS = ['de', 'en'];
   var REALUNIT_HOSTS = ['realunit.app', 'www.realunit.app', 'dev.realunit.app'];
-  var APP_STORE_URL = 'https://apps.apple.com/ch/app/realunit/id6759720010';
+  var APP_STORE_ID = '6759720010';
+  var APP_STORE_URL = 'https://apps.apple.com/ch/app/realunit/id' + APP_STORE_ID;
   var PLAY_STORE_BASE = 'https://play.google.com/store/apps/details?id=swiss.realunit.app';
 
   var I18N = {
@@ -183,6 +184,15 @@
     return APP_STORE_URL;
   }
 
+  // iOS Smart App Banner. app-argument carries the custom-scheme invite/promo
+  // link so a banner install can still take over the code (Play referrer
+  // covers Android).
+  function itunesBanner(kind, code) {
+    var banner = 'app-id=' + APP_STORE_ID;
+    if (kind && code) banner += ', app-argument=' + appLink(kind, code);
+    return banner;
+  }
+
   // Play Store URL. A code is attached as install referrer so Android can
   // keep it across a fresh install (`invite=<code>` or `promo=<code>`).
   function playStoreUrl(code, kind) {
@@ -307,6 +317,7 @@
     buildLookupUrl: buildLookupUrl,
     appLink: appLink,
     appStoreUrl: appStoreUrl,
+    itunesBanner: itunesBanner,
     playStoreUrl: playStoreUrl,
     interpolate: interpolate,
     mapResult: mapResult,

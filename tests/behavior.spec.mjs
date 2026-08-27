@@ -687,6 +687,10 @@ test.describe('invite and promo landing', () => {
       'content',
       'https://realunit.app/assets/og.png',
     );
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
     await expect(page.locator('#ok-retap')).toHaveText(/nochmals antippen/);
     await expect(page.locator('#ok-retap')).toBeHidden();
     await expect(page.locator('#ok-cta')).toHaveAttribute(
