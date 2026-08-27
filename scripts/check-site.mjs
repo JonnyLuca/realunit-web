@@ -138,6 +138,42 @@ for (const file of htmlFiles) {
   checkScriptOrder(label, html, '/invite/invite.js', '/js/lib/invite-core.js');
 }
 
+// Universal Link / App Link verification files for /invite and /promo.
+const aasaPath = join(PUBLIC, '.well-known', 'apple-app-site-association');
+if (!existsSync(aasaPath)) {
+  fail('public/.well-known/apple-app-site-association is missing');
+} else {
+  try {
+    const aasa = JSON.parse(read(aasaPath));
+    const details = aasa?.applinks?.details;
+    const first = Array.isArray(details) ? details[0] : null;
+    const paths = [...(first?.paths ?? []), ...(first?.components ?? []).map((c) => c['/'])];
+    if (!paths.some((p) => p === '/invite/*')) {
+      fail('apple-app-site-association: missing /invite/*');
+    }
+    if (!paths.some((p) => p === '/promo/*')) {
+      fail('apple-app-site-association: missing /promo/*');
+    }
+  } catch (e) {
+    fail(`apple-app-site-association: ${e instanceof Error ? e.message : e}`);
+  }
+}
+const assetlinksPath = join(PUBLIC, '.well-known', 'assetlinks.json');
+if (!existsSync(assetlinksPath)) {
+  fail('public/.well-known/assetlinks.json is missing');
+} else {
+  try {
+    const links = JSON.parse(read(assetlinksPath));
+    if (!Array.isArray(links) || links.length === 0) {
+      fail('assetlinks.json: expected a non-empty array');
+    } else if (links[0]?.target?.package_name !== 'swiss.realunit.app') {
+      fail('assetlinks.json: package_name must be swiss.realunit.app');
+    }
+  } catch (e) {
+    fail(`assetlinks.json: ${e instanceof Error ? e.message : e}`);
+  }
+}
+
 if (errors.length > 0) {
   for (const message of errors) console.error(`error    ${message}`);
   console.error(`\ncheck-site: ${errors.length} error(s) across ${htmlFiles.length} HTML files.`);

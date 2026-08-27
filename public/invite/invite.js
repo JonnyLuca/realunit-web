@@ -91,12 +91,23 @@
 
   if (params.get('mock') && !core.isRealUnitHost(window.location.hostname)) {
     render(
-      core.mapResult(200, {
-        kind: parsed.kind,
-        inviterName: 'Björn',
-        inviteeName: 'Alice',
-        actionText: '',
-      }),
+      core.mapResult(
+        200,
+        parsed.kind === 'promo'
+          ? {
+              kind: 'promo',
+              actionText:
+                'Mit dem Code EVT1 schenken wir dir bei deinem ersten erfolgreich abgewickelten Kauf 20 Token dazu.',
+              campaignTextEn:
+                'With code EVT1 we give you 20 tokens on your first successful purchase.',
+            }
+          : {
+              kind: 'invite',
+              inviterName: 'Björn',
+              inviteeName: 'Alice',
+              actionText: '',
+            },
+      ),
     );
     return;
   }
