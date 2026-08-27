@@ -212,6 +212,7 @@ describe('interpolate and i18n parity', () => {
   test('de invite copy uses Hey {invitee} and a separate inviter line', () => {
     expect(I18N.de['invite.title']).toBe('Hey {invitee}');
     expect(I18N.de['invite.body']).toBe('{inviter} lädt dich ein zu RealUnit.');
+    expect(I18N.de['invite.body.fallback']).toBe('Du bist zu RealUnit eingeladen.');
     expect(I18N.de.retap).toMatch(/nochmals antippen/);
   });
 

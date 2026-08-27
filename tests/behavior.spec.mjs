@@ -679,6 +679,23 @@ test.describe('invite and promo landing', () => {
     );
   });
 
+  test('a blank inviter name uses the fallback body', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: '   ',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+    await expect(page.locator('#ok-body')).toHaveText('Du bist zu RealUnit eingeladen.');
+  });
+
   test('a blank invitee name uses the fallback title', async ({ page }) => {
     await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
       route.fulfill({

@@ -95,12 +95,13 @@
           : copy['invite.title.fallback'],
       );
       var action = String(payload.actionText || '').trim();
+      var inviter = String(payload.inviterName || '').trim();
       setText(
         'ok-body',
         action ||
-          core.interpolate(copy['invite.body'], {
-            inviter: String(payload.inviterName || '').trim(),
-          }),
+          (inviter
+            ? core.interpolate(copy['invite.body'], { inviter: inviter })
+            : copy['invite.body.fallback']),
       );
     }
     show('state-ok');

@@ -21,6 +21,7 @@
       'invite.title': 'Hey {invitee}',
       'invite.title.fallback': 'Du bist eingeladen',
       'invite.body': '{inviter} lädt dich ein zu RealUnit.',
+      'invite.body.fallback': 'Du bist zu RealUnit eingeladen.',
       'invite.pitch': 'Werde Aktionärin der RealUnit Schweiz AG, direkt in deinem eigenen Wallet.',
       'promo.title': 'Promo-Code',
       retap:
@@ -49,6 +50,7 @@
       'invite.title': 'Hey {invitee}',
       'invite.title.fallback': 'You are invited',
       'invite.body': '{inviter} is inviting you to RealUnit.',
+      'invite.body.fallback': 'You are invited to RealUnit.',
       'invite.pitch': 'Become a shareholder of RealUnit Schweiz AG, in your own wallet.',
       'promo.title': 'Promo code',
       retap:
