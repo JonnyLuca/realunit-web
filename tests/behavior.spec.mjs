@@ -597,6 +597,26 @@ test.describe('invite and promo landing', () => {
     expect(calls).toEqual([]);
   });
 
+  test('a bare /invite?code= looks up the query code', async ({ page }) => {
+    let requestedUrl = null;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      requestedUrl = route.request().url();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      });
+    });
+    await page.goto('/invite?code=AB12CD');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    expect(requestedUrl).toContain('/v1/realunit/referral/code/AB12CD');
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+  });
+
   test('a successful invite lookup shows the greeting and the custom-scheme CTA', async ({
     page,
   }) => {

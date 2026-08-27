@@ -9,7 +9,7 @@
     defaultLang: 'de',
   });
   var copy = core.I18N[lang];
-  var parsed = core.parseCodeFromPath(window.location.pathname);
+  var parsed = core.parseCodeFromLocation(window.location.pathname, window.location.search);
 
   function setText(id, text) {
     var el = document.getElementById(id);

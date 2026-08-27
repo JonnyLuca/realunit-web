@@ -9,6 +9,7 @@ const {
   isRealUnitHost,
   apiBase,
   parseCodeFromPath,
+  parseCodeFromLocation,
   buildLookupUrl,
   appLink,
   appStoreUrl,
@@ -130,6 +131,53 @@ describe('parseCodeFromPath', () => {
       kind: 'invite',
       code: 'AB12CD',
     });
+  });
+});
+
+describe('parseCodeFromLocation', () => {
+  test('path segment wins over a query code', () => {
+    expect(parseCodeFromLocation('/invite/AB12CD', '?code=OTHER')).toEqual({
+      kind: 'invite',
+      code: 'AB12CD',
+    });
+  });
+
+  test('reads code, invite, or promo query on a bare /invite or /promo path', () => {
+    expect(parseCodeFromLocation('/invite', '?code=AB12CD')).toEqual({
+      kind: 'invite',
+      code: 'AB12CD',
+    });
+    expect(parseCodeFromLocation('/invite/', 'invite=AB12CD')).toEqual({
+      kind: 'invite',
+      code: 'AB12CD',
+    });
+    expect(parseCodeFromLocation('/promo', '?promo=EVT1')).toEqual({
+      kind: 'promo',
+      code: 'EVT1',
+    });
+    expect(parseCodeFromLocation('/PROMO/', '?code=EVT1')).toEqual({
+      kind: 'promo',
+      code: 'EVT1',
+    });
+  });
+
+  test('rejects unknown paths, missing search, and blank query codes', () => {
+    expect(parseCodeFromLocation(null, '?code=AB12CD')).toBeNull();
+    expect(parseCodeFromLocation('/other', '?code=AB12CD')).toBeNull();
+    expect(parseCodeFromLocation('/invite', null)).toBeNull();
+    expect(parseCodeFromLocation('/invite', '')).toBeNull();
+    expect(parseCodeFromLocation('/invite', '?code=%20')).toBeNull();
+    expect(parseCodeFromLocation('/invite', '?lang=en')).toBeNull();
+    expect(parseCodeFromLocation('/', '?code=AB12CD')).toBeNull();
+  });
+
+  test('keeps a malformed percent-encoded query code and caps at 256', () => {
+    expect(parseCodeFromLocation('/invite', '?code=AB%')).toEqual({
+      kind: 'invite',
+      code: 'AB%',
+    });
+    const long = 'A'.repeat(300);
+    expect(parseCodeFromLocation('/invite', `?code=${long}`).code).toHaveLength(256);
   });
 });
 

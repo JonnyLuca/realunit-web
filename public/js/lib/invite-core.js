@@ -118,6 +118,37 @@
     return { kind: kind, code: code };
   }
 
+  function capCode(raw) {
+    if (raw == null) return null;
+    var code = String(raw);
+    try {
+      code = decodeURIComponent(code);
+    } catch (e) {
+      // keep the raw value when it is not valid percent-encoding
+    }
+    code = code.trim();
+    if (!code) return null;
+    if (code.length > 256) code = code.slice(0, 256);
+    return code;
+  }
+
+  // Path `/invite/{code}` wins. Bare `/invite?code=` / `?invite=` / `?promo=`
+  // is the query fallback when a shared link omitted the path segment.
+  function parseCodeFromLocation(pathname, search) {
+    var fromPath = parseCodeFromPath(pathname);
+    if (fromPath) return fromPath;
+    if (typeof pathname !== 'string') return null;
+    var parts = pathname.split('/').filter(Boolean);
+    var kind = parts.length ? String(parts[0]).toLowerCase() : '';
+    if (kind !== 'invite' && kind !== 'promo') return null;
+    if (typeof search !== 'string' || !search) return null;
+    var qs = search.charAt(0) === '?' ? search.slice(1) : search;
+    var params = new URLSearchParams(qs);
+    var code = capCode(params.get('code') || params.get('invite') || params.get('promo'));
+    if (!code) return null;
+    return { kind: kind, code: code };
+  }
+
   var LOOKUP_TIMEOUT_MS = 15000;
 
   function lookupFetchInit(signal) {
@@ -232,6 +263,7 @@
     isRealUnitHost: isRealUnitHost,
     apiBase: apiBase,
     parseCodeFromPath: parseCodeFromPath,
+    parseCodeFromLocation: parseCodeFromLocation,
     buildLookupUrl: buildLookupUrl,
     appLink: appLink,
     appStoreUrl: appStoreUrl,
