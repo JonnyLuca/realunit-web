@@ -169,6 +169,7 @@
   }
 
   function mapResult(status, body) {
+    // Keep in sync with isReferralLookupInvalidStatus in the RealUnit app.
     if (status === 404 || status === 400 || status === 409 || status === 410 || status === 422) {
       return { state: 'invalid' };
     }
