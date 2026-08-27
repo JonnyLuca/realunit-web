@@ -668,4 +668,35 @@ test.describe('invite and promo landing', () => {
     await page.goto('/promo/EVT1?lang=en');
     await expect(page.locator('#ok-body')).toHaveText('EN campaign');
   });
+
+  test('?mock=1 does not call the API and greets the invitee', async ({ page }) => {
+    const calls = [];
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      calls.push(route.request().url());
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/invite/AB12CD?mock=1');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+    expect(calls).toEqual([]);
+  });
+
+  test('?mock=invalid and ?mock=unavailable skip the API', async ({ page }) => {
+    const calls = [];
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      calls.push(route.request().url());
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/invite/AB12CD?mock=invalid');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    await page.goto('/promo/EVT1?mock=unavailable');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    expect(calls).toEqual([]);
+  });
+
+  test('promo mock copy includes the 200 REALU first-purchase floor', async ({ page }) => {
+    await page.goto('/promo/EVT1?mock=1');
+    await expect(page.locator('#ok-body')).toHaveText(/mindestens 200 RealUnit-Aktientoken/);
+    await expect(page.locator('#ok-body')).toHaveText(/begrenzt auf 100 Einlösungen/);
+  });
 });

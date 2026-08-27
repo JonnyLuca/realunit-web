@@ -89,57 +89,65 @@
     show('state-ok');
   }
 
-  if (params.get('mock') && !core.isRealUnitHost(window.location.hostname)) {
-    render(
-      core.mapResult(
-        200,
-        parsed.kind === 'promo'
-          ? {
-              kind: 'promo',
-              actionText:
-                'Mit dem Code EVT1 schenken wir dir bei deinem ersten erfolgreich abgewickelten Kauf 20 Token dazu.',
-              campaignTextEn:
-                'With code EVT1 we give you 20 tokens on your first successful purchase.',
-            }
-          : {
-              kind: 'invite',
-              inviterName: 'Björn',
-              inviteeName: 'Alice',
-              actionText: '',
-            },
-      ),
-    );
-    return;
-  }
-
-  var controller = new AbortController();
-  var timeoutId = setTimeout(function () {
-    controller.abort();
-  }, 15000);
-
-  fetch(url, {
-    method: 'GET',
-    headers: { Accept: 'application/json' },
-    signal: controller.signal,
-  })
-    .then(function (res) {
-      return res.json().then(
-        function (body) {
-          return { status: res.status, body: body };
-        },
-        function () {
-          return { status: res.status, body: null };
-        },
-      );
-    })
-    .then(function (r) {
-      clearTimeout(timeoutId);
-      render(core.mapResult(r.status, r.body));
-    })
-    .catch(function () {
-      clearTimeout(timeoutId);
+  // Local preview only (?mock=1|invalid|unavailable). Never honored on
+  // realunit.app / dev.realunit.app, so a shared prod link cannot spoof state.
+  var mock = params.get('mock');
+  if (mock && !core.isRealUnitHost(window.location.hostname)) {
+    if (mock === 'invalid') {
+      render({ state: 'invalid' });
+    } else if (mock === 'unavailable') {
       render({ state: 'unavailable' });
-    });
+    } else {
+      render(
+        core.mapResult(
+          200,
+          parsed.kind === 'promo'
+            ? {
+                kind: 'promo',
+                actionText:
+                  'Mit dem Code EVT1 schenken wir dir bei deinem ersten erfolgreich abgewickelten Kauf von mindestens 200 RealUnit-Aktientoken 20 Token dazu. Die 20 Token werden als Zugabe zum Kauf gewährt und mindern damit den effektiven Kaufpreis. Gültig bis 7.9.2026, einmal je Person, begrenzt auf 100 Einlösungen, nicht kumulierbar mit einer Empfehlungsprämie. Die RealUnit Schweiz AG kann die Aktion jederzeit beenden.',
+                campaignTextEn:
+                  'With code EVT1 we give you 20 tokens on your first successful purchase of at least 200 RealUnit share tokens. The 20 tokens are granted as a bonus and reduce the effective purchase price. Valid until 7 Sep 2026, once per person, limited to 100 redemptions, not combinable with a referral prize. RealUnit Schweiz AG may end the campaign at any time.',
+              }
+            : {
+                kind: 'invite',
+                inviterName: 'Björn',
+                inviteeName: 'Alice',
+                actionText: '',
+              },
+        ),
+      );
+    }
+  } else {
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function () {
+      controller.abort();
+    }, 15000);
+
+    fetch(url, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    })
+      .then(function (res) {
+        return res.json().then(
+          function (body) {
+            return { status: res.status, body: body };
+          },
+          function () {
+            return { status: res.status, body: null };
+          },
+        );
+      })
+      .then(function (r) {
+        clearTimeout(timeoutId);
+        render(core.mapResult(r.status, r.body));
+      })
+      .catch(function () {
+        clearTimeout(timeoutId);
+        render({ state: 'unavailable' });
+      });
+  }
 
   var retry = document.getElementById('unavailable-cta');
   if (retry) {

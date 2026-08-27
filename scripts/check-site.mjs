@@ -147,6 +147,11 @@ if (!existsSync(aasaPath)) {
     const aasa = JSON.parse(read(aasaPath));
     const details = aasa?.applinks?.details;
     const first = Array.isArray(details) ? details[0] : null;
+    const appId = 'N2BP27J7N6.swiss.realunit.app';
+    const appIDs = first?.appIDs ?? [];
+    if (first?.appID !== appId && !appIDs.includes(appId)) {
+      fail('apple-app-site-association: missing appID N2BP27J7N6.swiss.realunit.app');
+    }
     const paths = [...(first?.paths ?? []), ...(first?.components ?? []).map((c) => c['/'])];
     if (!paths.some((p) => p === '/invite/*')) {
       fail('apple-app-site-association: missing /invite/*');
@@ -168,6 +173,8 @@ if (!existsSync(assetlinksPath)) {
       fail('assetlinks.json: expected a non-empty array');
     } else if (links[0]?.target?.package_name !== 'swiss.realunit.app') {
       fail('assetlinks.json: package_name must be swiss.realunit.app');
+    } else if (!Array.isArray(links[0]?.target?.sha256_cert_fingerprints)) {
+      fail('assetlinks.json: sha256_cert_fingerprints must be an array');
     }
   } catch (e) {
     fail(`assetlinks.json: ${e instanceof Error ? e.message : e}`);

@@ -4,12 +4,20 @@ The website served at **realunit.app**. Public, static.
 
 ## v1 (current)
 
-A minimal landing page — one hero image from the RealUnit app plus the three download buttons.
+A minimal landing page — one hero image from the RealUnit app plus the store buttons —
+plus invite/promo landings and the Aktionariat confirm / account-merge flows.
 Deliberately **without a build toolchain**: plain HTML + assets in `public/`,
 uploaded to Cloudflare Pages.
 
 - `public/index.html` — landing, shows `assets/hero.jpg` centered on a light background
   with the store/download buttons below it
+- `public/invite/` and `public/promo/` — referral and campaign landings; look up
+  `GET /v1/realunit/referral/code/:code`, open `realunit-wallet://invite|promo/{code}`,
+  and pass the code as a Play install referrer
+- `public/.well-known/apple-app-site-association` and `assetlinks.json` — Universal
+  Links / App Links for `/invite/*` and `/promo/*`. The Play signing SHA-256 is
+  filled once the certificate is available from Play Console; an empty array is
+  intentional until then.
 - `public/platform.js` — enlarges the store button matching the visitor's platform
   (iOS → App Store, Android → Play Store); without JS all buttons stay equal-size
 - `public/assets/hero.jpg` — hero (source: the app's splash background)
@@ -40,10 +48,7 @@ projects in the DNS/deployment configuration. The `handbook.` subdomain is unaff
 
 ## Roadmap (v2+)
 
-- `/confirm-aktionariat` — guided Aktionariat address confirmation (calls `api.dfx.swiss`)
-- `/account-merge` — confirms adding a wallet address to the existing account (calls the public DFX API)
 - Legal pages — rendered from the app's `assets/legal/*.md` (build-time fetch, single source)
-- Universal Links / App Links (`/.well-known/*`)
 
 From v2 a build toolchain (Astro) is introduced; the plain-image landing stays the home page.
 
