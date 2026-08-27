@@ -776,6 +776,12 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#ok-body')).toHaveText(/begrenzt auf 100 Einlösungen/);
   });
 
+  test('promo mock with lang=en uses campaignTextEn', async ({ page }) => {
+    await page.goto('/promo/EVT1?mock=1&lang=en');
+    await expect(page.locator('#ok-body')).toHaveText(/at least 200 RealUnit share tokens/);
+    await expect(page.locator('#ok-body')).toHaveText(/limited to 100 redemptions/);
+  });
+
   test('English landings localize store badge labels', async ({ page }) => {
     await page.goto('/invite/AB12CD?mock=1&lang=en');
     await expect(page.locator('#state-ok')).toBeVisible();
