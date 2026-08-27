@@ -87,18 +87,19 @@
       setText('ok-body', core.promoBody(payload, lang));
     } else {
       document.title = copy['doc.title.invite'];
-      var invitee = payload.inviteeName || '';
+      var invitee = String(payload.inviteeName || '').trim();
       setText(
         'ok-title',
         invitee
           ? core.interpolate(copy['invite.title'], { invitee: invitee })
           : copy['invite.title.fallback'],
       );
+      var action = String(payload.actionText || '').trim();
       setText(
         'ok-body',
-        payload.actionText ||
+        action ||
           core.interpolate(copy['invite.body'], {
-            inviter: payload.inviterName || '',
+            inviter: String(payload.inviterName || '').trim(),
           }),
       );
     }
@@ -135,18 +136,14 @@
       );
     }
   } else {
+    var timedOut = false;
     var controller = new AbortController();
     var timeoutId = setTimeout(function () {
+      timedOut = true;
       controller.abort();
-    }, 15000);
+    }, core.LOOKUP_TIMEOUT_MS);
 
-    fetch(url, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-      cache: 'no-store',
-      credentials: 'omit',
-      signal: controller.signal,
-    })
+    fetch(url, core.lookupFetchInit(controller.signal))
       .then(function (res) {
         return res.json().then(
           function (body) {
@@ -159,7 +156,7 @@
       })
       .then(function (r) {
         clearTimeout(timeoutId);
-        render(core.mapResult(r.status, r.body));
+        render(core.finalizeLookup(timedOut, r.status, r.body));
       })
       .catch(function () {
         clearTimeout(timeoutId);

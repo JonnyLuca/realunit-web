@@ -630,11 +630,67 @@ test.describe('invite and promo landing', () => {
   });
 
   test('a 404 invite is invalid; a 500 is unavailable', async ({ page }) => {
+    let status = 404;
     await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
-      route.fulfill({ status: 404, contentType: 'application/json', body: '{}' }),
+      route.fulfill({ status, contentType: 'application/json', body: '{}' }),
     );
     await page.goto('/invite/NOPE');
     await expect(page.locator('#state-invalid')).toBeVisible();
+    status = 500;
+    await page.goto('/invite/NOPE');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+  });
+
+  test('410 and 422 lookups are invalid', async ({ page }) => {
+    let status = 410;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({ status, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/invite/GONE');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    status = 422;
+    await page.goto('/promo/BAD');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+  });
+
+  test('a percent-encoded invite path is looked up decoded', async ({ page }) => {
+    let requestedUrl = null;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      requestedUrl = route.request().url();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      });
+    });
+    await page.goto('/invite/AB%2F12');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    expect(requestedUrl).toContain('/v1/realunit/referral/code/AB%2F12');
+    await expect(page.locator('#ok-cta')).toHaveAttribute(
+      'href',
+      'realunit-wallet://invite/AB%2F12',
+    );
+  });
+
+  test('a blank invitee name uses the fallback title', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: '   ',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#ok-title')).toHaveText('Du bist eingeladen');
+    await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
   });
 
   test('a promo path renders the API action text 1:1', async ({ page }) => {

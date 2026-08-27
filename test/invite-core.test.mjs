@@ -16,6 +16,9 @@ const {
   interpolate,
   mapResult,
   promoBody,
+  LOOKUP_TIMEOUT_MS,
+  lookupFetchInit,
+  finalizeLookup,
 } = core;
 
 describe('resolveLang', () => {
@@ -104,6 +107,14 @@ describe('parseCodeFromPath', () => {
     const long = 'A'.repeat(300);
     expect(parseCodeFromPath(`/invite/${long}`).code).toHaveLength(256);
   });
+
+  test('trims whitespace and rejects a blank decoded segment', () => {
+    expect(parseCodeFromPath('/invite/%20')).toBeNull();
+    expect(parseCodeFromPath('/invite/  AB12CD  ')).toEqual({
+      kind: 'invite',
+      code: 'AB12CD',
+    });
+  });
 });
 
 describe('URLs', () => {
@@ -163,6 +174,28 @@ describe('promoBody', () => {
   test('DE prefers actionText/campaignText', () => {
     expect(promoBody(payload, 'de')).toBe('DE action');
     expect(promoBody(null, 'de')).toBe('');
+  });
+
+  test('EN ignores empty campaignTextEn', () => {
+    expect(promoBody({ campaignTextEn: '', actionText: 'DE action' }, 'en')).toBe('DE action');
+  });
+});
+
+describe('lookup fetch', () => {
+  test('aborts after 15s and uses cache:no-store credentials:omit', () => {
+    expect(LOOKUP_TIMEOUT_MS).toBe(15000);
+    const init = lookupFetchInit('sig');
+    expect(init.method).toBe('GET');
+    expect(init.cache).toBe('no-store');
+    expect(init.credentials).toBe('omit');
+    expect(init.headers.Accept).toBe('application/json');
+    expect(init.signal).toBe('sig');
+  });
+
+  test('finalizeLookup drops a payload that arrived after the budget', () => {
+    expect(finalizeLookup(true, 200, { kind: 'invite' })).toEqual({ state: 'unavailable' });
+    expect(finalizeLookup(false, 200, { kind: 'promo' }).state).toBe('promo');
+    expect(finalizeLookup(false, 410, {})).toEqual({ state: 'invalid' });
   });
 });
 

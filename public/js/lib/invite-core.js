@@ -108,9 +108,30 @@
     } catch (e) {
       // keep the raw segment
     }
+    code = String(code).trim();
     if (!code) return null;
     if (code.length > 256) code = code.slice(0, 256);
     return { kind: kind, code: code };
+  }
+
+  var LOOKUP_TIMEOUT_MS = 15000;
+
+  function lookupFetchInit(signal) {
+    var init = {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+      credentials: 'omit',
+    };
+    if (signal) init.signal = signal;
+    return init;
+  }
+
+  // Drop a payload that arrived after the 15s budget, including a slow
+  // res.json() that outlived the fetch abort.
+  function finalizeLookup(timedOut, status, body) {
+    if (timedOut) return { state: 'unavailable' };
+    return mapResult(status, body);
   }
 
   function buildLookupUrl(base, code) {
@@ -177,6 +198,7 @@
   global.RealUnitInvite = {
     SUPPORTED_LANGS: SUPPORTED_LANGS,
     I18N: I18N,
+    LOOKUP_TIMEOUT_MS: LOOKUP_TIMEOUT_MS,
     resolveLang: resolveLang,
     isRealUnitHost: isRealUnitHost,
     apiBase: apiBase,
@@ -188,5 +210,7 @@
     interpolate: interpolate,
     mapResult: mapResult,
     promoBody: promoBody,
+    lookupFetchInit: lookupFetchInit,
+    finalizeLookup: finalizeLookup,
   };
 })(window);
