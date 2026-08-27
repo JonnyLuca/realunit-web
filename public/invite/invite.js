@@ -16,6 +16,11 @@
     if (el) el.textContent = text;
   }
 
+  function setMeta(selector, content) {
+    var el = document.querySelector(selector);
+    if (el && content) el.setAttribute('content', content);
+  }
+
   function show(id) {
     ['state-loading', 'state-ok', 'state-invalid', 'state-unavailable'].forEach(function (name) {
       var node = document.getElementById(name);
@@ -39,6 +44,9 @@
   setText('ok-retap', copy['retap']);
   var descEl = document.querySelector('meta[name="description"]');
   if (descEl && copy['doc.desc']) descEl.setAttribute('content', copy['doc.desc']);
+  setMeta('meta[property="og:title"]', document.title);
+  setMeta('meta[property="og:description"]', copy['doc.desc']);
+  setMeta('meta[property="og:url"]', window.location.href);
   var storesNav = document.querySelector('.stores');
   if (storesNav && copy['stores.nav']) {
     storesNav.setAttribute('aria-label', copy['stores.nav']);
@@ -106,6 +114,15 @@
       );
     }
     show('state-ok');
+    setMeta('meta[property="og:title"]', document.title);
+    var okTitle = document.getElementById('ok-title');
+    var okBody = document.getElementById('ok-body');
+    if (okTitle && okTitle.textContent) {
+      setMeta('meta[property="og:title"]', okTitle.textContent);
+    }
+    if (okBody && okBody.textContent) {
+      setMeta('meta[property="og:description"]', okBody.textContent);
+    }
   }
 
   // Local preview only (?mock=1|invalid|unavailable). Never honored on
