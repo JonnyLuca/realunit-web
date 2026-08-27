@@ -158,7 +158,7 @@
       })
       .then(function (r) {
         clearTimeout(timeoutId);
-        render(core.finalizeLookup(timedOut, r.status, r.body));
+        render(core.finalizeLookup(timedOut, r.status, r.body, parsed.kind));
       })
       .catch(function () {
         clearTimeout(timeoutId);

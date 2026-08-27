@@ -713,6 +713,19 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
   });
 
+  test('a promo path without kind still uses promo copy', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ actionText: '20 REALU extra' }),
+      }),
+    );
+    await page.goto('/promo/EVT1');
+    await expect(page.locator('#ok-title')).toHaveText('Promo-Code');
+    await expect(page.locator('#ok-body')).toHaveText('20 REALU extra');
+  });
+
   test('a promo path renders the API action text 1:1', async ({ page }) => {
     await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
       route.fulfill({

@@ -133,9 +133,9 @@
 
   // Drop a payload that arrived after the 15s budget, including a slow
   // res.json() that outlived the fetch abort.
-  function finalizeLookup(timedOut, status, body) {
+  function finalizeLookup(timedOut, status, body, fallbackKind) {
     if (timedOut) return { state: 'unavailable' };
-    return mapResult(status, body);
+    return mapResult(status, body, fallbackKind);
   }
 
   function buildLookupUrl(base, code) {
@@ -168,14 +168,15 @@
     });
   }
 
-  function mapResult(status, body) {
+  function mapResult(status, body, fallbackKind) {
     // Keep in sync with isReferralLookupInvalidStatus in the RealUnit app.
     if (status === 404 || status === 400 || status === 409 || status === 410 || status === 422) {
       return { state: 'invalid' };
     }
     if (status < 200 || status >= 300) return { state: 'unavailable' };
     if (!body || typeof body !== 'object') return { state: 'unavailable' };
-    var kind = String(body.kind).toLowerCase() === 'promo' ? 'promo' : 'invite';
+    var raw = String(body.kind || fallbackKind || 'invite').toLowerCase();
+    var kind = raw === 'promo' ? 'promo' : 'invite';
     return { state: kind, payload: body };
   }
 
