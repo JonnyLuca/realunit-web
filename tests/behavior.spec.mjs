@@ -739,6 +739,10 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#state-ok')).toBeVisible();
     await expect(page.locator('#ok-retap')).toBeHidden();
     await expect(page.locator('#ok-cta')).toBeVisible();
+    await expect(page.locator('#ok-cta')).toHaveAttribute(
+      'href',
+      /intent:\/\/realunit\.app\/promo\/EVT1#Intent;scheme=https;package=swiss\.realunit\.app/,
+    );
   });
 
   test('a 404 invite is invalid; a 500 is unavailable', async ({ page }) => {

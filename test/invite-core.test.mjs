@@ -15,6 +15,8 @@ const {
   appStoreUrl,
   itunesBanner,
   playStoreUrl,
+  androidIntentUrl,
+  openInAppUrl,
   interpolate,
   mapResult,
   promoBody,
@@ -207,6 +209,19 @@ describe('URLs', () => {
 
   test('appStoreUrl is the App Store listing', () => {
     expect(appStoreUrl()).toBe('https://apps.apple.com/ch/app/realunit/id6759720010');
+  });
+
+  test('androidIntentUrl opens the App Link or falls back to Play with referrer', () => {
+    expect(androidIntentUrl('invite', 'AB12CD')).toBe(
+      'intent://realunit.app/invite/AB12CD#Intent;scheme=https;package=swiss.realunit.app;S.browser_fallback_url=' +
+        encodeURIComponent(
+          'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=invite%3DAB12CD',
+        ) +
+        ';end',
+    );
+    expect(openInAppUrl('promo', 'EVT1', 'android')).toContain('intent://realunit.app/promo/EVT1');
+    expect(openInAppUrl('invite', 'AB12', 'ios')).toBe('realunit-wallet://invite/AB12');
+    expect(openInAppUrl('invite', 'AB12', null)).toBe('realunit-wallet://invite/AB12');
   });
 
   test('itunesBanner carries the custom-scheme app-argument when a code is present', () => {

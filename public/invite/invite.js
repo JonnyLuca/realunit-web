@@ -69,7 +69,11 @@
 
   var base = core.apiBase({ host: window.location.hostname, paramApi: params.get('api') });
   var url = core.buildLookupUrl(base, parsed.code);
-  var appHref = core.appLink(parsed.kind, parsed.code);
+  var appHref = core.openInAppUrl(
+    parsed.kind,
+    parsed.code,
+    document.documentElement.getAttribute('data-platform'),
+  );
   var cta = document.getElementById('ok-cta');
   if (cta) cta.setAttribute('href', appHref);
   setMeta('meta[name="apple-itunes-app"]', core.itunesBanner(parsed.kind, parsed.code));

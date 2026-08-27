@@ -203,6 +203,24 @@
     return PLAY_STORE_BASE;
   }
 
+  // Chrome intent: open the https App Link if the app is installed, otherwise
+  // the Play Store URL with the install referrer.
+  function androidIntentUrl(kind, code) {
+    var path = String(kind) + '/' + encodeURIComponent(code);
+    return (
+      'intent://realunit.app/' +
+      path +
+      '#Intent;scheme=https;package=swiss.realunit.app;S.browser_fallback_url=' +
+      encodeURIComponent(playStoreUrl(code, kind)) +
+      ';end'
+    );
+  }
+
+  function openInAppUrl(kind, code, platform) {
+    if (platform === 'android') return androidIntentUrl(kind, code);
+    return appLink(kind, code);
+  }
+
   function interpolate(template, values) {
     return String(template).replace(/\{(\w+)\}/g, function (_, key) {
       return values[key] == null ? '' : String(values[key]);
@@ -319,6 +337,8 @@
     appStoreUrl: appStoreUrl,
     itunesBanner: itunesBanner,
     playStoreUrl: playStoreUrl,
+    androidIntentUrl: androidIntentUrl,
+    openInAppUrl: openInAppUrl,
     interpolate: interpolate,
     mapResult: mapResult,
     promoBody: promoBody,
