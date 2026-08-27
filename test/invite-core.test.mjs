@@ -228,6 +228,22 @@ describe('mapResult', () => {
     expect(mapResult(200, {}).state).toBe('invite');
   });
 
+  test('unwraps data/item/result/payload maps on a 200 lookup', () => {
+    expect(mapResult(200, { data: { kind: 'promo', actionText: '20 extra' } })).toEqual({
+      state: 'promo',
+      payload: { kind: 'promo', actionText: '20 extra' },
+    });
+    expect(
+      mapResult(200, { item: { kind: 'invite', inviterName: 'Björn' } }).payload.inviterName,
+    ).toBe('Björn');
+    expect(mapResult(200, { result: { kind: 'Promo' } }).state).toBe('promo');
+    expect(mapResult(200, { payload: { kind: 'invite' } }).state).toBe('invite');
+    expect(mapResult(200, { data: ['not-a-map'], kind: 'invite' }).state).toBe('invite');
+    expect(mapResult(200, { data: 12, kind: 'invite' }).state).toBe('invite');
+    expect(mapResult(200, [])).toEqual({ state: 'unavailable' });
+    expect(mapResult(200, 'missing')).toEqual({ state: 'unavailable' });
+  });
+
   test('NestJS unmounted-route 404 is unavailable, not expired', () => {
     expect(
       mapResult(404, { statusCode: 404, message: 'Cannot GET /v1/realunit/referral/code/TEST' }),

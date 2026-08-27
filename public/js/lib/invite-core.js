@@ -213,6 +213,16 @@
     return /^Cannot (GET|POST|PUT|PATCH|DELETE) /i.test(routeMissingMessage(body));
   }
 
+  function unwrapLookup(body) {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
+    var keys = ['data', 'item', 'result', 'payload'];
+    for (var i = 0; i < keys.length; i++) {
+      var inner = body[keys[i]];
+      if (inner && typeof inner === 'object' && !Array.isArray(inner)) return inner;
+    }
+    return body;
+  }
+
   function mapResult(status, body, fallbackKind) {
     // Keep in sync with isReferralLookupInvalid in the RealUnit app.
     if (isUnrouted(body)) return { state: 'unavailable' };
@@ -220,7 +230,8 @@
       return { state: 'invalid' };
     }
     if (status < 200 || status >= 300) return { state: 'unavailable' };
-    if (!body || typeof body !== 'object') return { state: 'unavailable' };
+    body = unwrapLookup(body);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return { state: 'unavailable' };
     var fromBody = typeof body.kind === 'string' ? body.kind.trim() : '';
     var raw = (fromBody || fallbackKind || 'invite').toLowerCase();
     var kind = raw === 'promo' ? 'promo' : 'invite';
