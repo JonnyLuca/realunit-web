@@ -63,6 +63,8 @@
     .only-mobile { display: none; }
     html[data-platform] .only-mobile { display: block; }
     html[data-platform] .only-desktop { display: none; }
+    .only-ios { display: none; }
+    html[data-platform="ios"] .only-ios { display: block; }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -78,7 +80,7 @@
       <p id="ok-pitch"></p>
       <p class="only-desktop" id="ok-desktop"></p>
       <p class="only-mobile"><a class="btn" id="ok-cta" href="realunit-wallet://open" rel="noopener">In der App öffnen</a></p>
-      <p class="hint only-mobile" id="ok-retap"></p>
+      <p class="hint only-ios" id="ok-retap"></p>
       <nav class="stores" aria-label="App herunterladen">
         <a class="store-link" data-store="apple" href="https://apps.apple.com/ch/app/realunit/id6759720010" target="_blank" rel="noopener" aria-label="RealUnit im App Store laden">
           <img class="store-badge store-badge--apple" src="/assets/badge-app-store.svg" width="120" height="40" alt="Laden im App Store" decoding="async" />

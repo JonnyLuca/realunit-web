@@ -615,6 +615,7 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
     await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
     await expect(page.locator('#ok-retap')).toHaveText(/nochmals antippen/);
+    await expect(page.locator('#ok-retap')).toBeHidden();
     await expect(page.locator('#ok-cta')).toHaveAttribute(
       'href',
       'realunit-wallet://invite/AB12CD',
@@ -627,6 +628,40 @@ test.describe('invite and promo landing', () => {
       'href',
       'https://apps.apple.com/ch/app/realunit/id6759720010',
     );
+  });
+
+  test('iOS shows the re-tap hint after a successful lookup', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await forcePlatform(page, 'ios');
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-retap')).toBeVisible();
+    await expect(page.locator('#ok-cta')).toBeVisible();
+  });
+
+  test('Android hides the re-tap hint (Play Install Referrer keeps the code)', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ kind: 'promo', actionText: '20 REALU extra' }),
+      }),
+    );
+    await forcePlatform(page, 'android');
+    await page.goto('/promo/EVT1');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-retap')).toBeHidden();
+    await expect(page.locator('#ok-cta')).toBeVisible();
   });
 
   test('a 404 invite is invalid; a 500 is unavailable', async ({ page }) => {

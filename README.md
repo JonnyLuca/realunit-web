@@ -13,7 +13,8 @@ uploaded to Cloudflare Pages.
   with the store/download buttons below it
 - `public/invite/` and `public/promo/` — referral and campaign landings; look up
   `GET /v1/realunit/referral/code/:code`, open `realunit-wallet://invite|promo/{code}`,
-  and pass the code as a Play install referrer
+  and pass the code as a Play install referrer. The re-tap hint is iOS-only;
+  Android keeps the code via the Play referrer.
 - `public/.well-known/apple-app-site-association` and `assetlinks.json` — Universal
   Links / App Links for `/invite/*` and `/promo/*`. The Play signing SHA-256 is
   filled once the certificate is available from Play Console; an empty array is
