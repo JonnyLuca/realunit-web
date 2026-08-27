@@ -699,4 +699,18 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#ok-body')).toHaveText(/mindestens 200 RealUnit-Aktientoken/);
     await expect(page.locator('#ok-body')).toHaveText(/begrenzt auf 100 Einlösungen/);
   });
+
+  test('English landings localize store badge labels', async ({ page }) => {
+    await page.goto('/invite/AB12CD?mock=1&lang=en');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('nav.stores')).toHaveAttribute('aria-label', 'Download the app');
+    await expect(page.locator('a[data-store="apple"]')).toHaveAttribute(
+      'aria-label',
+      'Get RealUnit on the App Store',
+    );
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'aria-label',
+      'Get RealUnit on Google Play',
+    );
+  });
 });

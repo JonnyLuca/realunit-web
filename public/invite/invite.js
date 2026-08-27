@@ -37,6 +37,22 @@
   setText('ok-desktop', copy['cta.desktop']);
   setText('ok-pitch', copy['invite.pitch']);
   setText('ok-retap', copy['retap']);
+  var descEl = document.querySelector('meta[name="description"]');
+  if (descEl && copy['doc.desc']) descEl.setAttribute('content', copy['doc.desc']);
+  var storesNav = document.querySelector('.stores');
+  if (storesNav && copy['stores.nav']) {
+    storesNav.setAttribute('aria-label', copy['stores.nav']);
+  }
+  document.querySelectorAll('a[data-store="apple"]').forEach(function (el) {
+    if (copy['stores.apple.aria']) el.setAttribute('aria-label', copy['stores.apple.aria']);
+    var img = el.querySelector('img');
+    if (img && copy['stores.apple.alt']) img.setAttribute('alt', copy['stores.apple.alt']);
+  });
+  document.querySelectorAll('a[data-store="play"]').forEach(function (el) {
+    if (copy['stores.play.aria']) el.setAttribute('aria-label', copy['stores.play.aria']);
+    var img = el.querySelector('img');
+    if (img && copy['stores.play.alt']) img.setAttribute('alt', copy['stores.play.alt']);
+  });
 
   if (!parsed) {
     show('state-invalid');
