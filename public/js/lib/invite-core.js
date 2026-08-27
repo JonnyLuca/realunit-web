@@ -140,7 +140,7 @@
     if (status === 404 || status === 400) return { state: 'invalid' };
     if (status < 200 || status >= 300) return { state: 'unavailable' };
     if (!body || typeof body !== 'object') return { state: 'unavailable' };
-    var kind = body.kind === 'promo' ? 'promo' : 'invite';
+    var kind = String(body.kind).toLowerCase() === 'promo' ? 'promo' : 'invite';
     return { state: kind, payload: body };
   }
 
