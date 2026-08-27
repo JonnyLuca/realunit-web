@@ -175,7 +175,8 @@
     }
     if (status < 200 || status >= 300) return { state: 'unavailable' };
     if (!body || typeof body !== 'object') return { state: 'unavailable' };
-    var raw = String(body.kind || fallbackKind || 'invite').toLowerCase();
+    var fromBody = typeof body.kind === 'string' ? body.kind.trim() : '';
+    var raw = (fromBody || fallbackKind || 'invite').toLowerCase();
     var kind = raw === 'promo' ? 'promo' : 'invite';
     return { state: kind, payload: body };
   }

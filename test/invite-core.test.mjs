@@ -165,6 +165,7 @@ describe('mapResult', () => {
     expect(mapResult(200, null)).toEqual({ state: 'unavailable' });
     expect(mapResult(200, { kind: 'promo' }).state).toBe('promo');
     expect(mapResult(200, { kind: 'Promo' }).state).toBe('promo');
+    expect(mapResult(200, { kind: '  Promo  ' }).state).toBe('promo');
     expect(mapResult(200, { kind: 'invite' }).state).toBe('invite');
     expect(mapResult(200, { kind: 'Invite' }).state).toBe('invite');
     expect(mapResult(200, { actionText: 'x' }, 'promo').state).toBe('promo');
