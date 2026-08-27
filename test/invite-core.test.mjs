@@ -18,6 +18,7 @@ const {
   androidIntentUrl,
   openInAppUrl,
   androidAppUrl,
+  iosAppUrl,
   interpolate,
   mapResult,
   promoBody,
@@ -229,6 +230,10 @@ describe('URLs', () => {
     expect(androidAppUrl('promo', 'EVT1')).toBe(
       'android-app://swiss.realunit.app/https/realunit.app/promo/EVT1',
     );
+    expect(iosAppUrl('invite', 'AB12CD')).toBe(
+      'ios-app://6759720010/realunit-wallet/invite/AB12CD',
+    );
+    expect(iosAppUrl('promo', 'EVT1')).toBe('ios-app://6759720010/realunit-wallet/promo/EVT1');
   });
 
   test('itunesBanner carries the custom-scheme app-argument when a code is present', () => {

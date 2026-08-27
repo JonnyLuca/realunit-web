@@ -229,6 +229,12 @@
     );
   }
 
+  function iosAppUrl(kind, code) {
+    return (
+      'ios-app://' + APP_STORE_ID + '/realunit-wallet/' + kind + '/' + encodeURIComponent(code)
+    );
+  }
+
   function interpolate(template, values) {
     return String(template).replace(/\{(\w+)\}/g, function (_, key) {
       return values[key] == null ? '' : String(values[key]);
@@ -348,6 +354,7 @@
     androidIntentUrl: androidIntentUrl,
     openInAppUrl: openInAppUrl,
     androidAppUrl: androidAppUrl,
+    iosAppUrl: iosAppUrl,
     interpolate: interpolate,
     mapResult: mapResult,
     promoBody: promoBody,

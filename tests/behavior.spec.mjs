@@ -695,6 +695,10 @@ test.describe('invite and promo landing', () => {
       'href',
       'android-app://swiss.realunit.app/https/realunit.app/invite/AB12CD',
     );
+    await expect(page.locator('link[rel="alternate"][data-ios-app]')).toHaveAttribute(
+      'href',
+      'ios-app://6759720010/realunit-wallet/invite/AB12CD',
+    );
     await expect(page.locator('#ok-retap')).toHaveText(/nochmals antippen/);
     await expect(page.locator('#ok-retap')).toBeHidden();
     await expect(page.locator('#ok-cta')).toHaveAttribute(

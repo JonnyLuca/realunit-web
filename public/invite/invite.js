@@ -85,6 +85,14 @@
     document.head.appendChild(androidAlt);
   }
   androidAlt.setAttribute('href', core.androidAppUrl(parsed.kind, parsed.code));
+  var iosAlt = document.querySelector('link[rel="alternate"][data-ios-app]');
+  if (!iosAlt) {
+    iosAlt = document.createElement('link');
+    iosAlt.setAttribute('rel', 'alternate');
+    iosAlt.setAttribute('data-ios-app', '');
+    document.head.appendChild(iosAlt);
+  }
+  iosAlt.setAttribute('href', core.iosAppUrl(parsed.kind, parsed.code));
   document.querySelectorAll('a[data-store="apple"]').forEach(function (el) {
     el.setAttribute('href', core.appStoreUrl());
   });
