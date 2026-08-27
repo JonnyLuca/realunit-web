@@ -165,7 +165,7 @@
   }
 
   function mapResult(status, body) {
-    if (status === 404 || status === 400 || status === 410 || status === 422) {
+    if (status === 404 || status === 400 || status === 409 || status === 410 || status === 422) {
       return { state: 'invalid' };
     }
     if (status < 200 || status >= 300) return { state: 'unavailable' };

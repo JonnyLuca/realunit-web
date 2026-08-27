@@ -641,11 +641,14 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#state-unavailable')).toBeVisible();
   });
 
-  test('410 and 422 lookups are invalid', async ({ page }) => {
-    let status = 410;
+  test('409, 410 and 422 lookups are invalid', async ({ page }) => {
+    let status = 409;
     await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
       route.fulfill({ status, contentType: 'application/json', body: '{}' }),
     );
+    await page.goto('/invite/USED');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    status = 410;
     await page.goto('/invite/GONE');
     await expect(page.locator('#state-invalid')).toBeVisible();
     status = 422;

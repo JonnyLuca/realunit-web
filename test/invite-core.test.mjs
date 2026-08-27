@@ -146,9 +146,10 @@ describe('URLs', () => {
 });
 
 describe('mapResult', () => {
-  test('404/400/410/422 are invalid, other errors unavailable, promo vs invite from the body', () => {
+  test('404/400/409/410/422 are invalid, other errors unavailable, promo vs invite from the body', () => {
     expect(mapResult(404, {})).toEqual({ state: 'invalid' });
     expect(mapResult(400, {})).toEqual({ state: 'invalid' });
+    expect(mapResult(409, {})).toEqual({ state: 'invalid' });
     expect(mapResult(410, {})).toEqual({ state: 'invalid' });
     expect(mapResult(422, {})).toEqual({ state: 'invalid' });
     expect(mapResult(500, {})).toEqual({ state: 'unavailable' });
