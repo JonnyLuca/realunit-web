@@ -5,9 +5,11 @@
       {
         "appID": "N2BP27J7N6.swiss.realunit.app",
         "appIDs": ["N2BP27J7N6.swiss.realunit.app"],
-        "paths": ["/invite/*", "/promo/*"],
+        "paths": ["/invite", "/invite/*", "/promo", "/promo/*"],
         "components": [
+          { "/": "/invite" },
           { "/": "/invite/*" },
+          { "/": "/promo" },
           { "/": "/promo/*" }
         ]
       }

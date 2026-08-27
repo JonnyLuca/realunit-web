@@ -153,8 +153,14 @@ if (!existsSync(aasaPath)) {
       fail('apple-app-site-association: missing appID N2BP27J7N6.swiss.realunit.app');
     }
     const paths = [...(first?.paths ?? []), ...(first?.components ?? []).map((c) => c['/'])];
+    if (!paths.some((p) => p === '/invite')) {
+      fail('apple-app-site-association: missing exact /invite');
+    }
     if (!paths.some((p) => p === '/invite/*')) {
       fail('apple-app-site-association: missing /invite/*');
+    }
+    if (!paths.some((p) => p === '/promo')) {
+      fail('apple-app-site-association: missing exact /promo');
     }
     if (!paths.some((p) => p === '/promo/*')) {
       fail('apple-app-site-association: missing /promo/*');
