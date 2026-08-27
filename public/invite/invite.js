@@ -112,18 +112,32 @@
     return;
   }
 
-  fetch(url)
+  var controller = new AbortController();
+  var timeoutId = setTimeout(function () {
+    controller.abort();
+  }, 15000);
+
+  fetch(url, {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+    signal: controller.signal,
+  })
     .then(function (res) {
       return res.json().then(
         function (body) {
-          render(core.mapResult(res.status, body));
+          return { status: res.status, body: body };
         },
         function () {
-          render(core.mapResult(res.status, null));
+          return { status: res.status, body: null };
         },
       );
     })
+    .then(function (r) {
+      clearTimeout(timeoutId);
+      render(core.mapResult(r.status, r.body));
+    })
     .catch(function () {
+      clearTimeout(timeoutId);
       render({ state: 'unavailable' });
     });
 
