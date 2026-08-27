@@ -15,6 +15,7 @@ const {
   playStoreUrl,
   interpolate,
   mapResult,
+  promoBody,
 } = core;
 
 describe('resolveLang', () => {
@@ -131,6 +132,23 @@ describe('mapResult', () => {
     expect(mapResult(200, { kind: 'Promo' }).state).toBe('promo');
     expect(mapResult(200, { kind: 'invite' }).state).toBe('invite');
     expect(mapResult(200, { kind: 'Invite' }).state).toBe('invite');
+  });
+});
+
+describe('promoBody', () => {
+  const payload = {
+    actionText: 'DE action',
+    campaignTextEn: 'EN campaign',
+  };
+
+  test('EN prefers campaignTextEn and falls back to DE', () => {
+    expect(promoBody(payload, 'en')).toBe('EN campaign');
+    expect(promoBody({ actionText: 'DE only' }, 'en')).toBe('DE only');
+  });
+
+  test('DE prefers actionText/campaignText', () => {
+    expect(promoBody(payload, 'de')).toBe('DE action');
+    expect(promoBody(null, 'de')).toBe('');
   });
 });
 

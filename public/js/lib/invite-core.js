@@ -144,6 +144,27 @@
     return { state: kind, payload: body };
   }
 
+  // Locale-aware campaign wording. EN falls back to DE; DE falls back to EN.
+  function promoBody(payload, lang) {
+    if (!payload || typeof payload !== 'object') return '';
+    if (lang === 'en') {
+      return (
+        payload.campaignTextEn ||
+        payload.actionTextEn ||
+        payload.actionText ||
+        payload.campaignText ||
+        ''
+      );
+    }
+    return (
+      payload.actionText ||
+      payload.campaignText ||
+      payload.campaignTextEn ||
+      payload.actionTextEn ||
+      ''
+    );
+  }
+
   global.RealUnitInvite = {
     SUPPORTED_LANGS: SUPPORTED_LANGS,
     I18N: I18N,
@@ -157,5 +178,6 @@
     playStoreUrl: playStoreUrl,
     interpolate: interpolate,
     mapResult: mapResult,
+    promoBody: promoBody,
   };
 })(window);

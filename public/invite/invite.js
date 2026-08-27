@@ -68,7 +68,7 @@
     if (result.state === 'promo') {
       document.title = copy['doc.title.promo'];
       setText('ok-title', copy['promo.title']);
-      setText('ok-body', payload.actionText || payload.campaignText || '');
+      setText('ok-body', core.promoBody(payload, lang));
     } else {
       document.title = copy['doc.title.invite'];
       var invitee = payload.inviteeName || '';

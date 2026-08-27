@@ -652,4 +652,20 @@ test.describe('invite and promo landing', () => {
       'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=promo%3DEVT1',
     );
   });
+
+  test('a promo path with lang=en prefers campaignTextEn', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'Promo',
+          actionText: 'DE Aktion',
+          campaignTextEn: 'EN campaign',
+        }),
+      }),
+    );
+    await page.goto('/promo/EVT1?lang=en');
+    await expect(page.locator('#ok-body')).toHaveText('EN campaign');
+  });
 });
