@@ -143,7 +143,9 @@
   }
 
   function mapResult(status, body) {
-    if (status === 404 || status === 400 || status === 410) return { state: 'invalid' };
+    if (status === 404 || status === 400 || status === 410 || status === 422) {
+      return { state: 'invalid' };
+    }
     if (status < 200 || status >= 300) return { state: 'unavailable' };
     if (!body || typeof body !== 'object') return { state: 'unavailable' };
     var kind = String(body.kind).toLowerCase() === 'promo' ? 'promo' : 'invite';
