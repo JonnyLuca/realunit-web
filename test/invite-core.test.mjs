@@ -88,6 +88,11 @@ describe('parseCodeFromPath', () => {
   test('reads invite and promo codes', () => {
     expect(parseCodeFromPath('/invite/AB12CD')).toEqual({ kind: 'invite', code: 'AB12CD' });
     expect(parseCodeFromPath('/promo/EVT1')).toEqual({ kind: 'promo', code: 'EVT1' });
+    expect(parseCodeFromPath('/INVITE/AB12CD')).toEqual({ kind: 'invite', code: 'AB12CD' });
+    expect(parseCodeFromPath('/invite/AB12CD/extra')).toEqual({
+      kind: 'invite',
+      code: 'AB12CD',
+    });
   });
 
   test('rejects incomplete or unknown paths', () => {
