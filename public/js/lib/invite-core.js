@@ -168,8 +168,23 @@
     });
   }
 
+  function routeMissingMessage(body) {
+    if (!body || typeof body !== 'object') return '';
+    var msg = body.message;
+    if (Array.isArray(msg)) msg = msg.join(' ');
+    if (typeof msg !== 'string') return '';
+    return msg.trim();
+  }
+
+  // NestJS 404 `Cannot GET /v1/realunit/referral/code/…` means the route is
+  // not mounted yet — not that this invite/promo code is spent.
+  function isUnrouted(body) {
+    return /^Cannot (GET|POST|PUT|PATCH|DELETE) /i.test(routeMissingMessage(body));
+  }
+
   function mapResult(status, body, fallbackKind) {
-    // Keep in sync with isReferralLookupInvalidStatus in the RealUnit app.
+    // Keep in sync with isReferralLookupInvalid in the RealUnit app.
+    if (isUnrouted(body)) return { state: 'unavailable' };
     if (status === 404 || status === 400 || status === 409 || status === 410 || status === 422) {
       return { state: 'invalid' };
     }
@@ -181,25 +196,32 @@
     return { state: kind, payload: body };
   }
 
+  function firstNonEmpty(values) {
+    for (var i = 0; i < values.length; i++) {
+      var value = values[i];
+      if (typeof value === 'string' && value.trim()) return value;
+    }
+    return '';
+  }
+
   // Locale-aware campaign wording. EN falls back to DE; DE falls back to EN.
+  // Empty / whitespace-only API fields must not block the fallback chain.
   function promoBody(payload, lang) {
     if (!payload || typeof payload !== 'object') return '';
     if (lang === 'en') {
-      return (
-        payload.campaignTextEn ||
-        payload.actionTextEn ||
-        payload.actionText ||
-        payload.campaignText ||
-        ''
-      );
+      return firstNonEmpty([
+        payload.campaignTextEn,
+        payload.actionTextEn,
+        payload.actionText,
+        payload.campaignText,
+      ]);
     }
-    return (
-      payload.actionText ||
-      payload.campaignText ||
-      payload.campaignTextEn ||
-      payload.actionTextEn ||
-      ''
-    );
+    return firstNonEmpty([
+      payload.actionText,
+      payload.campaignText,
+      payload.campaignTextEn,
+      payload.actionTextEn,
+    ]);
   }
 
   global.RealUnitInvite = {

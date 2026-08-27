@@ -163,6 +163,75 @@ if (!existsSync(aasaPath)) {
     fail(`apple-app-site-association: ${e instanceof Error ? e.message : e}`);
   }
 }
+// Invite/promo glue and js/lib cores must stay off the immutable cache so a
+// landing-page update still rolls out. Cloudflare Pages `_headers` is the
+// only place those Cache-Control values exist.
+function parseCfHeaders(text) {
+  const blocks = new Map();
+  let current = null;
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trimEnd();
+    if (!line || line.trimStart().startsWith('#')) continue;
+    if (!line.startsWith(' ') && !line.startsWith('\t')) {
+      current = line.trim();
+      if (!blocks.has(current)) blocks.set(current, {});
+      continue;
+    }
+    if (!current) continue;
+    const idx = line.indexOf(':');
+    if (idx === -1) continue;
+    const name = line.slice(0, idx).trim().toLowerCase();
+    const value = line.slice(idx + 1).trim();
+    blocks.get(current)[name] = value;
+  }
+  return blocks;
+}
+
+function requireHeader(blocks, path, name, pred, label) {
+  const block = blocks.get(path);
+  if (!block) {
+    fail(`_headers: missing block for ${path}`);
+    return;
+  }
+  const value = block[name];
+  if (!value) {
+    fail(`_headers: ${path} missing ${name}`);
+    return;
+  }
+  if (pred && !pred(value)) fail(`_headers: ${path} ${name} ${label}`);
+}
+
+const headersPath = join(PUBLIC, '_headers');
+if (!existsSync(headersPath)) {
+  fail('public/_headers is missing');
+} else {
+  const blocks = parseCfHeaders(read(headersPath));
+  const notImmutable = (value) => /max-age=/i.test(value) && !/immutable/i.test(value);
+  const jsonType = (value) => /application\/json/i.test(value);
+  requireHeader(
+    blocks,
+    '/invite/invite.js',
+    'cache-control',
+    notImmutable,
+    'must be a non-immutable max-age',
+  );
+  requireHeader(blocks, '/js/*', 'cache-control', notImmutable, 'must be a non-immutable max-age');
+  requireHeader(
+    blocks,
+    '/.well-known/apple-app-site-association',
+    'content-type',
+    jsonType,
+    'must be application/json',
+  );
+  requireHeader(
+    blocks,
+    '/.well-known/assetlinks.json',
+    'content-type',
+    jsonType,
+    'must be application/json',
+  );
+}
+
 const assetlinksPath = join(PUBLIC, '.well-known', 'assetlinks.json');
 if (!existsSync(assetlinksPath)) {
   fail('public/.well-known/assetlinks.json is missing');

@@ -641,6 +641,23 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#state-unavailable')).toBeVisible();
   });
 
+  test('a NestJS unmounted-route 404 is unavailable, not expired', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          statusCode: 404,
+          message: 'Cannot GET /v1/realunit/referral/code/TEST',
+          error: 'Not Found',
+        }),
+      }),
+    );
+    await page.goto('/invite/TEST');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#state-invalid')).toBeHidden();
+  });
+
   test('409, 410 and 422 lookups are invalid', async ({ page }) => {
     let status = 409;
     await page.route(REFERRAL_CODE_ENDPOINT, (route) =>

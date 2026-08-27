@@ -112,6 +112,13 @@ describe('parseCodeFromPath', () => {
     });
   });
 
+  test('keeps a malformed percent-encoded segment', () => {
+    expect(parseCodeFromPath('/invite/AB%')).toEqual({
+      kind: 'invite',
+      code: 'AB%',
+    });
+  });
+
   test('caps the code at 256 characters', () => {
     const long = 'A'.repeat(300);
     expect(parseCodeFromPath(`/invite/${long}`).code).toHaveLength(256);
@@ -172,6 +179,19 @@ describe('mapResult', () => {
     expect(mapResult(200, { kind: 'invite' }, 'promo').state).toBe('invite');
     expect(mapResult(200, {}).state).toBe('invite');
   });
+
+  test('NestJS unmounted-route 404 is unavailable, not expired', () => {
+    expect(
+      mapResult(404, { statusCode: 404, message: 'Cannot GET /v1/realunit/referral/code/TEST' }),
+    ).toEqual({ state: 'unavailable' });
+    expect(mapResult(404, { message: ['Cannot POST /v1/realunit/referral/bind'] })).toEqual({
+      state: 'unavailable',
+    });
+    expect(mapResult(404, { message: 'Not found' })).toEqual({ state: 'invalid' });
+    expect(mapResult(404, { message: 12 })).toEqual({ state: 'invalid' });
+    expect(mapResult(404, null)).toEqual({ state: 'invalid' });
+    expect(mapResult(404, 'missing')).toEqual({ state: 'invalid' });
+  });
 });
 
 describe('promoBody', () => {
@@ -192,6 +212,12 @@ describe('promoBody', () => {
 
   test('EN ignores empty campaignTextEn', () => {
     expect(promoBody({ campaignTextEn: '', actionText: 'DE action' }, 'en')).toBe('DE action');
+  });
+
+  test('whitespace-only EN copy falls through to DE', () => {
+    expect(promoBody({ campaignTextEn: '   ', actionText: 'DE action' }, 'en')).toBe('DE action');
+    expect(promoBody({ campaignTextEn: 12, actionText: 'DE action' }, 'en')).toBe('DE action');
+    expect(promoBody({ actionText: '  ', campaignText: 'DE campaign' }, 'de')).toBe('DE campaign');
   });
 
   test('empty payload yields an empty string for the landing fallback', () => {
