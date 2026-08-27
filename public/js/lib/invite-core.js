@@ -233,7 +233,18 @@
     body = unwrapLookup(body);
     if (!body || typeof body !== 'object' || Array.isArray(body)) return { state: 'unavailable' };
     var fromBody = typeof body.kind === 'string' ? body.kind.trim() : '';
-    var raw = (fromBody || fallbackKind || 'invite').toLowerCase();
+    var raw = fromBody.toLowerCase();
+    if (!raw) {
+      var inviter = typeof body.inviterName === 'string' ? body.inviterName.trim() : '';
+      var hasCampaign = !!firstNonEmpty([
+        body.campaignText,
+        body.campaignTextEn,
+        body.actionText,
+        body.actionTextEn,
+      ]);
+      if (!inviter && hasCampaign) raw = 'promo';
+      else raw = (fallbackKind || 'invite').toLowerCase();
+    }
     var kind = raw === 'promo' ? 'promo' : 'invite';
     return { state: kind, payload: body };
   }

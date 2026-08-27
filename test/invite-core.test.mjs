@@ -226,6 +226,11 @@ describe('mapResult', () => {
     expect(mapResult(200, { actionText: 'x' }, 'promo').state).toBe('promo');
     expect(mapResult(200, { kind: 'invite' }, 'promo').state).toBe('invite');
     expect(mapResult(200, {}).state).toBe('invite');
+    expect(mapResult(200, { actionText: 'x' }, 'invite').state).toBe('promo');
+    expect(mapResult(200, { campaignTextEn: 'EN' }).state).toBe('promo');
+    expect(mapResult(200, { actionTextEn: 'EN' }).state).toBe('promo');
+    expect(mapResult(200, { inviterName: 'Björn', actionText: 'x' }).state).toBe('invite');
+    expect(mapResult(200, { inviterName: '   ', actionText: 'x' }).state).toBe('promo');
   });
 
   test('unwraps data/item/result/payload maps on a 200 lookup', () => {

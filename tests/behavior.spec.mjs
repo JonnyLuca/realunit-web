@@ -823,6 +823,19 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#ok-body')).toHaveText('20 REALU extra');
   });
 
+  test('an invite path with campaign text and no kind still renders as promo', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ actionText: '20 REALU extra' }),
+      }),
+    );
+    await page.goto('/invite/EVT1');
+    await expect(page.locator('#ok-title')).toHaveText('Promo-Code');
+    await expect(page.locator('#ok-body')).toHaveText('20 REALU extra');
+  });
+
   test('a promo path renders the API action text 1:1', async ({ page }) => {
     await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
       route.fulfill({
