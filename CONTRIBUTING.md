@@ -10,6 +10,30 @@ This repo is the **realunit.app** website — public, static. See the
   served. The dev dependencies exist **only** for the quality gates below
   (formatting, HTML validation, unit tests, screenshots); nothing compiles or
   bundles the site.
+- **Invite/promo HTML rewrite is banner, canonical, and store handoff.** Safari,
+  Play, and share crawlers snapshot `apple-itunes-app`, `og:url`,
+  `rel=canonical`, `twitter:url`, `og:title`, `twitter:title`,
+  `og:description`, `twitter:description`, `og:image:alt`, `twitter:image:alt`,
+  `og:locale`, `og:site_name`, html `lang`, the Play
+  referrer, android-app / ios-app alternate links, Facebook App Links
+  (`al:ios:url` / `al:android:url` are `realunit-wallet://…`; `al:android:class`
+  is `swiss.realunit.app.MainActivity`; `al:web:url`
+  is the HTTPS landing), and Twitter App Card `twitter:app:url:iphone` /
+  `twitter:app:url:ipad` / `twitter:app:url:googleplay` (same custom scheme)
+  from the HTML bytes before
+  `/js/invite-banner.js` / `invite.js` run, so `functions/_middleware.js`
+  (repo-root `functions/`, picked up by `wrangler pages deploy public`) and
+  `scripts/dev-server.mjs` inject those from the request URL (www folded onto
+  the apex). The campaign code is in `og:title` / `twitter:title` /
+  `og:description` / `og:image:alt` / `twitter:image:alt`; `?lang=en` sets English title/description/alt and `og:locale`;
+  invitee names wait for lookup JS. The committed
+  `public/invite` and `public/promo` HTML stay generic (`app-id` only, og:url /
+  twitter:url `/invite/` or `/promo/`, `og:site_name` RealUnit, generic titles and descriptions, Play
+  href without referrer, no `al:*`, no `twitter:app:*`, `format-detection`
+  `telephone=no, date=no` so iOS does not turn the code or Aktionstext date
+  into a link, `x-apple-data-detectors="false"` on `#ok-code` / `#ok-body`
+  because Safari re-scans JS-inserted text, no inline
+  `<script>`). Do not add other Pages Functions or server-side rendering.
 - **Keep the page self-contained.** `public/_headers` sets a strict CSP:
   - No inline `<script>` and no external resources of any kind (scripts, styles,
     images, fonts, fetch). Load JS from **same-origin** files instead.

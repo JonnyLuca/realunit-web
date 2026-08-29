@@ -1,0 +1,18 @@
+# Invite/promo only — do not 301 /.well-known/* (AASA and assetlinks
+# must be HTTP 200 on www, not a redirect). Apple fetches
+# https://www.realunit.app/.well-known/apple-app-site-association when
+# applinks:www.realunit.app is in the entitlements.
+# www /invite and /promo are also 200: Universal Links and the Smart App
+# Banner do not follow a 301 to the apex (Offerte Punkt 3).
+https://www.realunit.app/.well-known/apple-app-site-association  /.well-known/apple-app-site-association  200
+https://www.realunit.app/.well-known/assetlinks.json  /.well-known/assetlinks.json  200
+https://www.realunit.app/apple-app-site-association  /.well-known/apple-app-site-association  200
+https://www.realunit.app/invite   /invite/index.html  200
+https://www.realunit.app/invite/* /invite/index.html  200
+https://www.realunit.app/promo    /promo/index.html  200
+https://www.realunit.app/promo/*  /promo/index.html  200
+/invite    /invite/index.html  200
+/invite/*  /invite/index.html  200
+/promo     /promo/index.html   200
+/promo/*   /promo/index.html   200
+/apple-app-site-association  /.well-known/apple-app-site-association  200

@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "include": ["/invite", "/invite/*", "/promo", "/promo/*"],
+  "exclude": ["/invite/invite.js"]
+}

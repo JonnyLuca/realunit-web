@@ -4,12 +4,59 @@ The website served at **realunit.app**. Public, static.
 
 ## v1 (current)
 
-A minimal landing page — one hero image from the RealUnit app plus the three download buttons.
+A minimal landing page — one hero image from the RealUnit app plus the store buttons —
+plus invite/promo landings and the Aktionariat confirm / account-merge flows.
 Deliberately **without a build toolchain**: plain HTML + assets in `public/`,
 uploaded to Cloudflare Pages.
 
 - `public/index.html` — landing, shows `assets/hero.jpg` centered on a light background
   with the store/download buttons below it
+- `public/invite/` and `public/promo/` — referral and campaign landings; look up
+  `GET /v1/realunit/referral/code/:code` (contract:
+  [JonnyLuca/dfx-referral-api](https://github.com/JonnyLuca/dfx-referral-api)),
+  open `realunit-wallet://invite|promo/{code}`,
+  and pass the code as a Play install referrer. Path and query codes
+  (including ads/Play `utm_content` / `referrer` and Facebook/Google/Outlook
+  `u=` / `q=` / `url=` / email `link=` wrapping `invite=` or a landing URL, with or without
+  `https://`; a campaign name in `utm_content` does not hide a later wrapper key;
+  an empty or foreign `code=` does not hide a later `invite=` / `promo=`;
+  short `ios-app://` alternate links; Proofpoint URL Defense and Outlook Safe Links wrapping a
+  RealUnit landing; a foreign `https://` URL is not a code) are
+  uppercased, stripped of messenger zero-width/fullwidth characters and
+  trailing sentence punct (`!`, `?`, `/`, …), and capped at 32 like the
+  API lookup — including in the crawler HTML bytes Safari snapshots.
+  The re-tap hint is iOS-only;
+  Android keeps the code via the Play referrer. An App Store / Play / CTA tap
+  also copies the code (user gesture) so an iOS badge install can still be
+  pasted at registration. iOS `format-detection` is `telephone=no, date=no`
+  so Safari does not turn the campaign code or Aktionstext date into a link.
+  `#ok-code` and `#ok-body` also set `x-apple-data-detectors="false"` because
+  those strings are written after load.
+  `www.realunit.app/invite|promo` is HTTP 200 (not a
+  301 to the apex) so Universal Links and the Smart App Banner keep the host.
+  The Smart App Banner `app-argument`, `og:url`, `rel=canonical`,
+  `twitter:url`, `og:title`, `twitter:title`, `og:description`,
+  `twitter:description`, `og:image:alt`, `twitter:image:alt`, `og:locale`,
+  `og:site_name`, Play install referrer,
+  android-app / ios-app alternate links, Facebook App Links
+  (`al:ios:url` / `al:android:url` are `realunit-wallet://…`; `al:android:class`
+  is `swiss.realunit.app.MainActivity`; `al:web:url`
+  is the HTTPS landing), and Twitter App Card `twitter:app:url:*` (same
+  custom scheme; `twitter:app:country` is CH) are injected
+  into the HTML bytes from the request URL (`functions/_middleware.js` on
+  Cloudflare Pages, and the local dev-server) so Safari, Play, WhatsApp, X,
+  and share crawlers can snapshot them before JS. `og:title`, `og:description`,
+  and image alt name the campaign code; `?lang=en` sets English copy and `og:locale=en_GB`;
+  invitee names wait for lookup JS. `/js/invite-banner.js` in `<head>`
+  is the CSP-safe JS fallback — Cloudflare Pages CSP blocks inline `<script>`.
+- `public/.well-known/apple-app-site-association` and `assetlinks.json` — Universal
+  Links / App Links for `/invite/*` and `/promo/*` on apex and www (HTTP 200,
+  no 301). `sha256_cert_fingerprints`
+  lists (1) the v2 signing cert of GitHub release APK `realunit-1.2.17.apk`
+  (`O=DFX AG`, `CN=Konstantin Ullrich`) and (2) the Android debug keystore
+  used by the `pixel_jonny` AVD (`C=US, O=Android, CN=Android Debug`) so
+  debug App Links against `dev.realunit.app` verify. If Play App Signing uses
+  a different app-signing key, add that SHA-256 from Play Console beside them.
 - `public/platform.js` — enlarges the store button matching the visitor's platform
   (iOS → App Store, Android → Play Store); without JS all buttons stay equal-size
 - `public/assets/hero.jpg` — hero (source: the app's splash background)
@@ -40,10 +87,7 @@ projects in the DNS/deployment configuration. The `handbook.` subdomain is unaff
 
 ## Roadmap (v2+)
 
-- `/confirm-aktionariat` — guided Aktionariat address confirmation (calls `api.dfx.swiss`)
-- `/account-merge` — confirms adding a wallet address to the existing account (calls the public DFX API)
 - Legal pages — rendered from the app's `assets/legal/*.md` (build-time fetch, single source)
-- Universal Links / App Links (`/.well-known/*`)
 
 From v2 a build toolchain (Astro) is introduced; the plain-image landing stays the home page.
 

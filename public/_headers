@@ -20,3 +20,49 @@
 
 /js/*
   Cache-Control: public, max-age=3600
+
+/invite/invite.js
+  Cache-Control: public, max-age=3600
+
+# Invite/promo HTML (SPA shells), including /invite/{code}. Short max-age
+# so copy-code / CTA markup rolls out without waiting on the zone Browser
+# Cache TTL. /invite/invite.js is restated after the wildcard so the 1h
+# script cache wins whether first- or last-match applies.
+/invite
+  Cache-Control: public, max-age=60
+
+/invite/
+  Cache-Control: public, max-age=60
+
+/invite/index.html
+  Cache-Control: public, max-age=60
+
+/invite/*
+  Cache-Control: public, max-age=60
+
+/promo
+  Cache-Control: public, max-age=60
+
+/promo/
+  Cache-Control: public, max-age=60
+
+/promo/index.html
+  Cache-Control: public, max-age=60
+
+/promo/*
+  Cache-Control: public, max-age=60
+
+/invite/invite.js
+  Cache-Control: public, max-age=3600
+
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600
+
+/apple-app-site-association
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600
+
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600

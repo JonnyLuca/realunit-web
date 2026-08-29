@@ -1,7 +1,11 @@
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  injectLandingFromRequestUrl,
+  shouldRewriteItunesBanner,
+} from '../functions/lib/itunes-banner.js';
 import { PORT } from '../tests/pages.mjs';
 
 // Cloudflare Pages serves the contents of public/ at the site root. Mirror that
@@ -28,6 +32,28 @@ const notFoundPage = join(root, '404.html');
 
 function send(response, status, body = '') {
   response.writeHead(status, { 'content-type': 'text/plain; charset=utf-8' });
+  response.end(body);
+}
+
+// Mirror functions/_middleware.js: Safari snapshots apple-itunes-app,
+// og:url, and og:title from the HTML bytes. Rewrite those from the
+// request URL so local preview and Playwright match Cloudflare Pages.
+function sendHtml(response, filePath, requestUrl, method) {
+  const html = readFileSync(filePath, 'utf8');
+  let pathname = '/';
+  try {
+    pathname = new URL(requestUrl, `http://127.0.0.1:${port}`).pathname;
+  } catch {
+    pathname = String(requestUrl || '/').split('?')[0];
+  }
+  const body = shouldRewriteItunesBanner(pathname)
+    ? injectLandingFromRequestUrl(html, requestUrl)
+    : html;
+  response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+  if (method === 'HEAD') {
+    response.end();
+    return;
+  }
   response.end(body);
 }
 
@@ -65,10 +91,29 @@ createServer((request, response) => {
     return;
   }
 
-  const filePath = resolveRequestPath(request.url || '/');
+  const originalUrl = request.url || '/';
+  const filePath = resolveRequestPath(originalUrl);
 
   if (!filePath || !existsSync(filePath) || !statSync(filePath).isFile()) {
+    const pathname = decodeURIComponent(new URL(originalUrl, `http://127.0.0.1:${port}`).pathname);
+    if (pathname === '/invite' || pathname.startsWith('/invite/')) {
+      request.url = '/invite/index.html';
+    } else if (pathname === '/promo' || pathname.startsWith('/promo/')) {
+      request.url = '/promo/index.html';
+    }
+    if (request.url === '/invite/index.html' || request.url === '/promo/index.html') {
+      const rewritten = resolveRequestPath(request.url);
+      if (rewritten && existsSync(rewritten) && statSync(rewritten).isFile()) {
+        sendHtml(response, rewritten, originalUrl, request.method);
+        return;
+      }
+    }
     sendNotFound(response);
+    return;
+  }
+
+  if (extname(filePath) === '.html') {
+    sendHtml(response, filePath, originalUrl, request.method);
     return;
   }
 

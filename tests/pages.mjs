@@ -7,8 +7,20 @@ export const PORT = 4173;
 
 // Every public HTML page, used by the smoke spec. `/confirm-aktionariat/` and
 // `/account-merge/` load with no query params, so they render the "invalid link"
-// state without making a network request.
-export const PAGES = ['/', '/confirm-aktionariat/', '/account-merge/', '/404.html'];
+// state without making a network request. Bare `/invite` and `/promo` (no code)
+// are the same: invalid, no API call.
+export const PAGES = [
+  '/',
+  '/confirm-aktionariat/',
+  '/account-merge/',
+  '/404.html',
+  '/invite/AB12CD?mock=1',
+  '/invite/AB12CD?mock=spent',
+  '/promo/EVT1?mock=1',
+  '/promo/EVT1?mock=spent',
+  '/invite',
+  '/promo',
+];
 
 // Viewports the visual suite renders: desktop, a real tablet width, and a phone.
 export const PROJECTS = ['desktop-chromium', 'tablet-chromium', 'mobile-safari'];
@@ -168,6 +180,84 @@ export const VIEWS = [
   {
     slug: 'notfound',
     path: '/404.html',
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
+  },
+
+  // Invite landing — personal greeting, stores, copy (no live API).
+  {
+    slug: 'invite-ok',
+    path: '/invite/AB12CD?mock=1&lang=de',
+    waitFor: 'ok',
+    projects: ['desktop-chromium', 'tablet-chromium'],
+  },
+  {
+    slug: 'invite-ok-ios',
+    path: '/invite/AB12CD?mock=1&lang=de',
+    platform: 'ios',
+    waitFor: 'ok',
+    projects: ['mobile-safari'],
+  },
+  {
+    slug: 'invite-ok-android',
+    path: '/invite/AB12CD?mock=1&lang=de',
+    platform: 'android',
+    waitFor: 'ok',
+    projects: ['mobile-safari'],
+  },
+  {
+    slug: 'invite-ok-en',
+    path: '/invite/AB12CD?mock=1&lang=en',
+    waitFor: 'ok',
+    projects: ['desktop-chromium'],
+  },
+  {
+    slug: 'invite-invalid',
+    path: '/invite/AB12CD?mock=invalid&lang=de',
+    waitFor: 'invalid',
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
+  },
+  {
+    slug: 'invite-unavailable',
+    path: '/invite/AB12CD?mock=unavailable&lang=de',
+    waitFor: 'unavailable',
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
+  },
+  {
+    slug: 'promo-ok',
+    path: '/promo/EVT1?mock=1&lang=de',
+    waitFor: 'ok',
+    projects: ['desktop-chromium', 'tablet-chromium'],
+  },
+  {
+    slug: 'promo-ok-ios',
+    path: '/promo/EVT1?mock=1&lang=de',
+    platform: 'ios',
+    waitFor: 'ok',
+    projects: ['mobile-safari'],
+  },
+  {
+    slug: 'promo-ok-android',
+    path: '/promo/EVT1?mock=1&lang=de',
+    platform: 'android',
+    waitFor: 'ok',
+    projects: ['mobile-safari'],
+  },
+  {
+    slug: 'promo-ok-en',
+    path: '/promo/EVT1?mock=1&lang=en',
+    waitFor: 'ok',
+    projects: ['desktop-chromium'],
+  },
+  {
+    slug: 'promo-invalid',
+    path: '/promo/EVT1?mock=invalid&lang=de',
+    waitFor: 'invalid',
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
+  },
+  {
+    slug: 'promo-unavailable',
+    path: '/promo/EVT1?mock=unavailable&lang=de',
+    waitFor: 'unavailable',
     projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
 ];

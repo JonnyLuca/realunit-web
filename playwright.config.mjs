@@ -28,6 +28,9 @@ export default defineConfig({
   },
   use: {
     baseURL: BASE_URL,
+    // Swiss product default. Without this, Desktop Chrome's en-US navigator
+    // selects English copy and DE assertions wait out the 10s expect timeout.
+    locale: 'de-CH',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },

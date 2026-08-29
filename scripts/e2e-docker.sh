@@ -12,7 +12,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-VERSION="$(node -p "require('@playwright/test/package.json').version")"
+VERSION="$(node -p "try { require('@playwright/test/package.json').version } catch (e) { require('./package.json').devDependencies['@playwright/test'] }")"
 IMAGE="mcr.microsoft.com/playwright:v${VERSION}-noble"
 
 UPDATE=""

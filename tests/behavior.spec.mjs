@@ -573,3 +573,1338 @@ test.describe('account-merge flow', () => {
     expect(requestedUrl).toContain('code=abc');
   });
 });
+
+const REFERRAL_CODE_ENDPOINT = '**/v1/realunit/referral/code/**';
+
+test.describe('invite and promo landing', () => {
+  test.beforeEach(async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chromium', 'desktop-only invite-flow checks');
+  });
+
+  test('an invite path without a code is invalid and does not call the API', async ({ page }) => {
+    const calls = [];
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      calls.push(route.request().url());
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/invite/');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    await expect(page).toHaveTitle('Link ungültig oder abgelaufen');
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      'content',
+      'Link ungültig oder abgelaufen',
+    );
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Dieser Einladungs- oder Promo-Link ist ungültig oder bereits abgelaufen.',
+    );
+    await expect(page.locator('meta[property="og:locale:alternate"]')).toHaveAttribute(
+      'content',
+      'en_GB',
+    );
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#E02523');
+    await expect(page.locator('#invalid-home')).toBeVisible();
+    await expect(page.locator('#invalid-home')).toBeFocused();
+    await expect(page.locator('#invalid-home')).toHaveAttribute('href', '/');
+    await expect(page.locator('#invalid-home')).toHaveText('Zur Startseite');
+    expect(calls).toEqual([]);
+    await page.goto('/invite');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    await page.goto('/promo');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    expect(calls).toEqual([]);
+  });
+
+  test('a bare /invite?code= looks up the query code', async ({ page }) => {
+    let requestedUrl = null;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      requestedUrl = route.request().url();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      });
+    });
+    await page.goto('/invite?code=AB12CD');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    expect(requestedUrl).toContain('/v1/realunit/referral/code/AB12CD');
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+  });
+
+  test('a wrapped {data: {...}} lookup still greets the invitee', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            kind: 'invite',
+            inviterName: 'Björn',
+            inviteeName: 'Alice',
+          },
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+    await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
+  });
+
+  test('a sibling data object does not hide invite greeting fields', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+          data: { kind: 'promo', actionText: 'ignore' },
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+    await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
+  });
+
+  test('a successful invite lookup shows the greeting and the custom-scheme CTA', async ({
+    page,
+  }) => {
+    let requestedUrl = null;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      requestedUrl = route.request().url();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+          actionText: '',
+        }),
+      });
+    });
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    expect(requestedUrl).toContain('/v1/realunit/referral/code/AB12CD');
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+    await expect(page.locator('#ok-title')).toBeFocused();
+    await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
+    await expect(page.locator('#ok-title')).toHaveAttribute('translate', 'no');
+    await expect(page.locator('#ok-title')).toHaveClass(/notranslate/);
+    await expect(page.locator('#ok-body')).toHaveAttribute('translate', 'no');
+    await expect(page.locator('#ok-body')).toHaveClass(/notranslate/);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', 'Hey Alice');
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+      'content',
+      'Björn lädt dich ein zu RealUnit.',
+    );
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Björn lädt dich ein zu RealUnit.',
+    );
+    await expect(page.locator('meta[property="og:locale:alternate"]')).toHaveAttribute(
+      'content',
+      'en_GB',
+    );
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
+      'content',
+      'Hey Alice',
+    );
+    await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute(
+      'content',
+      'Björn lädt dich ein zu RealUnit.',
+    );
+    await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute(
+      'content',
+      'Hey Alice',
+    );
+    await expect(page.locator('meta[name="twitter:image:alt"]')).toHaveAttribute(
+      'content',
+      'Hey Alice',
+    );
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#1988C6');
+    await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute('content', 'de_CH');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      /\/invite\/AB12CD$/,
+    );
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+      'content',
+      /\/invite\/AB12CD$/,
+    );
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      'https://realunit.app/assets/og.png',
+    );
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+    await expect(page.locator('link[rel="alternate"][data-android-app]')).toHaveAttribute(
+      'href',
+      'android-app://swiss.realunit.app/https/realunit.app/invite/AB12CD',
+    );
+    await expect(page.locator('link[rel="alternate"][data-ios-app]')).toHaveAttribute(
+      'href',
+      'ios-app://6759720010/realunit-wallet/invite/AB12CD',
+    );
+    await expect(page.locator('#ok-retap')).toHaveText(/nochmals antippen/);
+    await expect(page.locator('#ok-retap')).toBeHidden();
+    await expect(page.locator('#ok-code')).toHaveText('AB12CD');
+    await expect(page.locator('#ok-code')).toHaveAttribute('role', 'button');
+    await expect(page.locator('#ok-code')).toHaveAttribute('translate', 'no');
+    await expect(page.locator('#ok-code')).toHaveClass(/notranslate/);
+    await expect(page.locator('#ok-code')).toHaveAttribute('lang', 'zxx');
+    await expect(page.locator('#ok-code')).toHaveAttribute('aria-label', /AB12CD/);
+    await expect(page.locator('#ok-code')).toHaveAttribute('aria-describedby', 'ok-code-hint');
+    await expect(page.locator('#state-ok')).toHaveAttribute('role', 'status');
+    await expect(page.locator('#state-ok')).toHaveAttribute('aria-busy', 'false');
+    await expect(page.locator('#ok-copy')).not.toHaveAttribute('aria-live');
+    await expect(page.locator('#ok-copy')).toHaveAttribute('aria-label', /AB12CD/);
+    await expect(page.locator('#ok-code-label')).toHaveText('Dein Code');
+    await expect(page.locator('#ok-copy')).toHaveText('Code kopieren');
+    await expect(page.locator('#ok-copy-link')).toBeVisible();
+    await expect(page.locator('#ok-copy-link')).toHaveText('Link kopieren');
+    await expect(page.locator('#ok-copy-link')).toHaveAttribute(
+      'aria-label',
+      /Link kopieren .*\/invite\/AB12CD$/,
+    );
+    await expect(page.locator('#ok-open')).toBeHidden();
+    await expect(page.locator('#ok-cta')).toBeHidden();
+    await expect(page.locator('#ok-cta')).toHaveAttribute(
+      'href',
+      'realunit-wallet://invite/AB12CD',
+    );
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'href',
+      'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=invite%3DAB12CD',
+    );
+    await expect(page.locator('a[data-store="apple"]')).toHaveAttribute(
+      'href',
+      'https://apps.apple.com/ch/app/realunit/id6759720010',
+    );
+  });
+
+  test('copy confirmation includes the code in the live label', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: () => Promise.resolve() },
+      });
+    });
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await page.clock.install();
+    await expect(page.locator('#ok-copy')).not.toHaveAttribute('aria-live');
+    await page.locator('#ok-copy').click();
+    await expect(page.locator('#ok-copy')).toHaveText('Kopiert');
+    await expect(page.locator('#ok-copy')).toHaveAttribute('aria-label', /Kopiert AB12CD/);
+    await expect(page.locator('#ok-copy')).not.toHaveAttribute('aria-live');
+    await expect(page.locator('#ok-code-hint')).toHaveText('Kopiert');
+    await expect(page.locator('#ok-code')).toHaveAttribute('aria-label', /Kopiert AB12CD/);
+    await page.clock.fastForward(500);
+    await page.locator('#ok-copy').click();
+    await page.clock.fastForward(1700);
+    await expect(page.locator('#ok-copy')).toHaveText('Kopiert');
+    await page.clock.fastForward(400);
+    await expect(page.locator('#ok-copy')).toHaveText('Code kopieren');
+    await expect(page.locator('#ok-code')).toHaveAttribute('aria-label', /Dein Code AB12CD/);
+    await expect(page.locator('#ok-code-hint')).toHaveText(/Registrierung/);
+  });
+
+  test('failed copy does not announce Kopiert', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: () => Promise.reject(new Error('denied')) },
+      });
+      document.execCommand = function () {
+        return false;
+      };
+    });
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await page.locator('#ok-copy').click();
+    await expect(page.locator('#ok-copy')).toHaveText('Code kopieren');
+    await expect(page.locator('#ok-copy')).toHaveClass(/btn-copy-failed/);
+    await expect(page.locator('#ok-code')).toHaveClass(/code-copy-failed/);
+    await expect(page.locator('#ok-copy')).not.toHaveAttribute('aria-live');
+    await expect(page.locator('#ok-code')).toHaveAttribute('aria-label', /Dein Code AB12CD/);
+    await expect(page.locator('#ok-code-hint')).not.toHaveText('Kopiert');
+    await page.locator('#ok-copy-link').click();
+    await expect(page.locator('#ok-copy-link')).toHaveText('Link kopieren');
+    await expect(page.locator('#ok-copy-link')).toHaveClass(/btn-copy-failed/);
+    await expect(page.locator('#ok-copy-link')).not.toHaveAttribute('aria-live');
+  });
+
+  test('ignores a second copy tap while writeText is in flight', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await page.evaluate(() => {
+      window.__copyWrites = 0;
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: {
+          writeText: () => {
+            window.__copyWrites += 1;
+            return new Promise(() => {});
+          },
+        },
+      });
+    });
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await page.locator('#ok-copy').click();
+    await expect(page.locator('#ok-copy')).toBeDisabled();
+    await expect(page.locator('#ok-copy')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('#ok-code')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('#ok-code')).toHaveAttribute('aria-disabled', 'true');
+    await page.evaluate(() => document.getElementById('ok-copy').click());
+    await page.evaluate(() => document.getElementById('ok-code').click());
+    expect(await page.evaluate(() => window.__copyWrites)).toBe(1);
+    await expect(page.locator('#ok-copy')).toHaveText('Code kopieren');
+  });
+
+  test('a hung writeText falls back after two seconds so copy is not stuck', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await page.evaluate(() => {
+      window.__copyWrites = 0;
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: {
+          writeText: () => {
+            window.__copyWrites += 1;
+            return new Promise(() => {});
+          },
+        },
+      });
+    });
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await page.locator('#ok-copy').click();
+    expect(await page.evaluate(() => window.__copyWrites)).toBe(1);
+    await page.waitForTimeout(2100);
+    await page.locator('#ok-copy').click();
+    expect(await page.evaluate(() => window.__copyWrites)).toBe(2);
+  });
+
+  test('code and link copy can run while the other writeText is in flight', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop-chromium', 'copy-link is desktop-only');
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await page.evaluate(() => {
+      window.__copyWrites = 0;
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: {
+          writeText: () => {
+            window.__copyWrites += 1;
+            return new Promise(() => {});
+          },
+        },
+      });
+    });
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await page.locator('#ok-copy').click();
+    await page.locator('#ok-copy-link').click();
+    expect(await page.evaluate(() => window.__copyWrites)).toBe(2);
+  });
+
+  test('desktop copy-link copies the canonical invite URL', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: () => Promise.resolve() },
+      });
+    });
+    await expect(page.locator('#ok-copy-link')).toBeVisible();
+    await expect(page.locator('#ok-copy-link')).toHaveAttribute(
+      'aria-label',
+      /Link kopieren .*\/invite\/AB12CD$/,
+    );
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await page.clock.install();
+    await expect(page.locator('#ok-copy-link')).not.toHaveAttribute('aria-live');
+    await page.locator('#ok-copy-link').click();
+    await expect(page.locator('#ok-copy-link')).toHaveText('Kopiert');
+    await expect(page.locator('#ok-copy-link')).toHaveAttribute(
+      'aria-label',
+      /Kopiert .*\/invite\/AB12CD$/,
+    );
+    await expect(page.locator('#ok-copy-link')).not.toHaveAttribute('aria-live');
+    await expect(page.locator('#ok-code-hint')).toHaveText('Kopiert');
+    await page.clock.fastForward(500);
+    await page.locator('#ok-copy-link').click();
+    await page.clock.fastForward(1700);
+    await expect(page.locator('#ok-copy-link')).toHaveText('Kopiert');
+    await page.clock.fastForward(400);
+    await expect(page.locator('#ok-copy-link')).toHaveText('Link kopieren');
+  });
+
+  test('iOS shows the re-tap hint after a successful lookup', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await forcePlatform(page, 'ios');
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-retap')).toBeVisible();
+    await expect(page.locator('#ok-code-box').locator('#ok-retap')).toBeVisible();
+    await expect(page.locator('#ok-copy-link')).toBeHidden();
+    await expect(page.locator('#ok-retap')).toHaveAttribute('role', 'note');
+    await expect(page.locator('#ok-retap')).toHaveText(/Code unten kopieren/);
+    await expect(page.locator('#ok-cta')).toBeVisible();
+    await expect(page.locator('#ok-cta')).toHaveAttribute('aria-describedby', 'ok-retap');
+    await expect(page.locator('a[data-store="apple"]')).toHaveAttribute('aria-current', 'true');
+    await expect(page.locator('a[data-store="play"]')).not.toHaveAttribute('aria-current');
+    await expect(page.locator('#ok-code')).toHaveText('AB12CD');
+    await expect(page.locator('#ok-code-hint')).toHaveText(/Registrierung/);
+  });
+
+  test('App Store tap copies the code for iOS install handoff', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await forcePlatform(page, 'ios');
+    await page.goto('/invite/AB12CD');
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: () => Promise.resolve() },
+      });
+    });
+    await expect(page.locator('#state-ok')).toBeVisible();
+    page.on('popup', (popup) => popup.close());
+    await page.locator('a[data-store="apple"]').click();
+    await expect(page.locator('#ok-copy')).toHaveText('Kopiert');
+    await expect(page.locator('#ok-code-hint')).toHaveText('Kopiert');
+  });
+
+  test('an invalid lookup does not copy the code on an App Store tap', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({ status: 404, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/invite/NOPE');
+    await page.evaluate(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: () => Promise.resolve() },
+      });
+    });
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    page.on('popup', (popup) => popup.close());
+    await page.locator('a[data-store="apple"]').click();
+    await expect(page.locator('#ok-copy')).toHaveText('Code kopieren');
+    await expect(page.locator('#ok-code-hint')).not.toHaveText('Kopiert');
+  });
+
+  test('iOS re-tap hint is visible while lookup is in flight', async ({ page }) => {
+    let release;
+    const gate = new Promise((resolve) => {
+      release = resolve;
+    });
+    await page.route(REFERRAL_CODE_ENDPOINT, async (route) => {
+      await gate;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      });
+    });
+    await forcePlatform(page, 'ios');
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#ok-code-box')).toBeVisible();
+    await expect(page.locator('#ok-open')).toBeHidden();
+    await expect(page.locator('#ok-retap')).toBeVisible();
+    await expect(page.locator('#ok-cta')).toBeHidden();
+    release();
+    await expect(page.locator('#ok-cta')).toBeVisible();
+    await expect(page.locator('#ok-retap')).toBeVisible();
+  });
+
+  test('Android hides the re-tap hint (Play Install Referrer keeps the code)', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ kind: 'promo', actionText: '20 REALU extra' }),
+      }),
+    );
+    await forcePlatform(page, 'android');
+    await page.goto('/promo/EVT1');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-pitch')).toHaveText(/Promo-Code/);
+    await expect(page.locator('#ok-retap')).toBeHidden();
+    await expect(page.locator('#ok-copy-link')).toBeHidden();
+    await expect(page.locator('#ok-cta')).toBeVisible();
+    await expect(page.locator('#ok-cta')).not.toHaveAttribute('aria-describedby');
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute('aria-current', 'true');
+    await expect(page.locator('a[data-store="apple"]')).not.toHaveAttribute('aria-current');
+    await expect(page.locator('#ok-cta')).toHaveAttribute(
+      'href',
+      /intent:\/\/realunit\.app\/promo\/EVT1#Intent;scheme=https;package=swiss\.realunit\.app/,
+    );
+    await expect(page.locator('#ok-code')).toHaveAttribute('aria-label', /EVT1/);
+    await expect(page.locator('#ok-copy')).not.toHaveAttribute('aria-live');
+    await expect(page.locator('#ok-copy')).toHaveAttribute('aria-label', /EVT1/);
+  });
+
+  test('CTA stays hidden until lookup finishes', async ({ page }) => {
+    let release;
+    const gate = new Promise((resolve) => {
+      release = resolve;
+    });
+    await page.route(REFERRAL_CODE_ENDPOINT, async (route) => {
+      await gate;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      });
+    });
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#ok-code-box')).toBeVisible();
+    await expect(page.locator('#ok-open')).toBeHidden();
+    await expect(page.locator('#ok-copy-link')).toBeVisible();
+    await expect(page.locator('#ok-desktop')).toBeVisible();
+    await expect(page.locator('#ok-desktop')).toHaveText(/Smartphone/);
+    await expect(page.locator('#ok-pitch')).toBeVisible();
+    await expect(page.locator('#ok-pitch')).toHaveText(/Aktionärin/);
+    await expect(page.locator('#ok-retap')).toBeHidden();
+    await expect(page.locator('#state-loading')).toBeHidden();
+    await expect(page.locator('#ok-code-hint')).toHaveText('Code wird geprüft…');
+    await expect(page).toHaveTitle('Einladung wird geladen…');
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      'content',
+      'Einladung wird geladen…',
+    );
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Einen Moment bitte.',
+    );
+    await expect(page.locator('#ok-code-hint')).toHaveAttribute('role', 'status');
+    await expect(page.locator('#ok-code-hint')).toHaveAttribute('aria-live', 'polite');
+    await expect(page.locator('#ok-code-hint')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'href',
+      /referrer=invite%3DAB12CD/,
+    );
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+    await expect(page.locator('link[rel="alternate"][data-android-app]')).toHaveAttribute(
+      'href',
+      'android-app://swiss.realunit.app/https/realunit.app/invite/AB12CD',
+    );
+    release();
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page).toHaveTitle('RealUnit — Einladung');
+    await expect(page.locator('#ok-open')).toBeHidden();
+    await expect(page.locator('#ok-cta')).toBeHidden();
+    await expect(page.locator('#ok-code-hint')).toHaveText(/Registrierung/);
+    await expect(page.locator('#ok-code-hint')).toHaveAttribute('aria-busy', 'false');
+  });
+
+  test('a 404 invite is invalid; a 500 is unavailable', async ({ page }) => {
+    let status = 404;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({ status, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/invite/NOPE');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    await expect(page).toHaveTitle('Link ungültig oder abgelaufen');
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Dieser Einladungs- oder Promo-Link ist ungültig oder bereits abgelaufen.',
+    );
+    await expect(page.locator('#invalid-home')).toBeFocused();
+    await expect(page.locator('#invalid-home')).toHaveCSS('outline-color', 'rgb(25, 136, 198)');
+    await expect(page.locator('#invalid-home')).toBeVisible();
+    await expect(page.locator('#invalid-home')).toHaveAttribute('href', '/');
+    await expect(page.locator('#invalid-title')).toHaveCSS('color', 'rgb(224, 37, 35)');
+    await expect(page.locator('#invalid-body')).toHaveCSS('color', 'rgb(224, 37, 35)');
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#E02523');
+    await expect(page.locator('#invalid-status')).toHaveAttribute('role', 'status');
+    await expect(page.locator('#invalid-status')).toHaveAttribute('aria-live', 'assertive');
+    await expect(page.locator('#invalid-status #invalid-home')).toHaveCount(0);
+    await expect(page.locator('#ok-code-box')).toBeHidden();
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010',
+    );
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'href',
+      'https://play.google.com/store/apps/details?id=swiss.realunit.app',
+    );
+    await expect(page.locator('a[data-store="play"]')).not.toHaveAttribute('href', /referrer=/);
+    status = 500;
+    await page.goto('/invite/NOPE');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page).toHaveTitle('Dienst vorübergehend nicht erreichbar');
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Wir konnten den Code gerade nicht prüfen. Bitte versuche es später erneut.',
+    );
+    await expect(page.locator('#unavailable-status')).toHaveAttribute('role', 'status');
+    await expect(page.locator('#unavailable-status')).toHaveAttribute('aria-live', 'polite');
+    await expect(page.locator('#state-unavailable')).toHaveAttribute('aria-busy', 'false');
+    await expect(page.locator('#unavailable-status #unavailable-cta')).toHaveCount(0);
+    await expect(page.locator('#unavailable-status #unavailable-home')).toHaveCount(0);
+    await expect(page.locator('#unavailable-cta')).toHaveAttribute(
+      'aria-describedby',
+      'unavailable-body',
+    );
+    await expect(page.locator('#unavailable-cta')).toBeFocused();
+    await expect(page.locator('#unavailable-cta')).toHaveCSS('outline-color', 'rgb(25, 136, 198)');
+    await expect(page.locator('#unavailable-home')).toBeVisible();
+    await expect(page.locator('#unavailable-home')).toHaveAttribute('href', '/');
+    await expect(page.locator('#unavailable-home')).toHaveText('Zur Startseite');
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#1988C6');
+    await expect(page.locator('#ok-code-box')).toBeVisible();
+    await expect(page.locator('#ok-code')).toHaveText('NOPE');
+    await expect(page.locator('#ok-open')).toBeHidden();
+    await expect(page.locator('#ok-pitch')).toHaveText(/Aktionärin/);
+    await expect(page.locator('#ok-cta')).toHaveAttribute('href', 'realunit-wallet://invite/NOPE');
+    await expect(page.locator('a[data-store="apple"]')).toBeVisible();
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'href',
+      /referrer=invite%3DNOPE/,
+    );
+  });
+
+  test('a NestJS unmounted-route 404 is unavailable, not expired', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          statusCode: 404,
+          message: 'Cannot GET /v1/realunit/referral/code/TEST',
+          error: 'Not Found',
+        }),
+      }),
+    );
+    await page.goto('/invite/TEST');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#state-invalid')).toBeHidden();
+  });
+
+  test('unavailable retry looks up again without a reload', async ({ page }) => {
+    let calls = 0;
+    let releaseSecond;
+    const second = new Promise((resolve) => {
+      releaseSecond = resolve;
+    });
+    await page.route(REFERRAL_CODE_ENDPOINT, async (route) => {
+      calls += 1;
+      if (calls === 1) {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: '{}',
+        });
+        return;
+      }
+      await second;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      });
+    });
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#unavailable-cta')).toBeFocused();
+    await page.locator('#unavailable-cta').click();
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#unavailable-cta')).toBeDisabled();
+    await expect(page.locator('#unavailable-cta')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('#ok-code-box')).toBeVisible();
+    releaseSecond();
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-title')).toHaveText(/Alice/);
+    await expect(page.locator('#ok-title')).toBeFocused();
+    expect(calls).toBe(2);
+  });
+
+  test('unavailable retry ignores a second tap while lookup is in flight', async ({ page }) => {
+    let calls = 0;
+    await page.route(REFERRAL_CODE_ENDPOINT, async (route) => {
+      calls += 1;
+      if (calls === 1) {
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: '{}',
+        });
+        return;
+      }
+      await new Promise(() => {});
+    });
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#unavailable-cta')).toBeEnabled();
+    await page.evaluate(() => {
+      const btn = document.getElementById('unavailable-cta');
+      btn.click();
+      btn.click();
+    });
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#unavailable-cta')).toBeDisabled();
+    await expect(page.locator('#unavailable-cta')).toHaveAttribute('aria-busy', 'true');
+    expect(calls).toBe(2);
+  });
+
+  test('unavailable retry that still fails returns focus to retry', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: '{}',
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#unavailable-cta')).toBeFocused();
+    await page.locator('#unavailable-cta').click();
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#unavailable-cta')).toBeFocused();
+  });
+
+  test('409, 410 and 422 lookups are invalid', async ({ page }) => {
+    let status = 409;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({ status, contentType: 'application/json', body: '{}' }),
+    );
+    await page.goto('/invite/USED');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    status = 410;
+    await page.goto('/invite/GONE');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    status = 422;
+    await page.goto('/promo/BAD');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+  });
+
+  test('a percent-encoded invite path is looked up decoded', async ({ page }) => {
+    let requestedUrl = null;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      requestedUrl = route.request().url();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+        }),
+      });
+    });
+    await page.goto('/invite/AB%2F12');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    expect(requestedUrl).toContain('/v1/realunit/referral/code/AB%2F12');
+    await expect(page.locator('#ok-cta')).toHaveAttribute(
+      'href',
+      'realunit-wallet://invite/AB%2F12',
+    );
+  });
+
+  test('a blank inviter name uses the fallback body', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: '   ',
+          inviteeName: 'Alice',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+    await expect(page.locator('#ok-title')).toHaveAttribute('translate', 'no');
+    await expect(page.locator('#ok-body')).toHaveText('Du bist zu RealUnit eingeladen.');
+    await expect(page.locator('#ok-body')).not.toHaveAttribute('translate');
+  });
+
+  test('a blank invitee name uses the fallback title', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: '   ',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD');
+    await expect(page.locator('#ok-title')).toHaveText('Du bist eingeladen');
+    await expect(page.locator('#ok-title')).not.toHaveAttribute('translate');
+    await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
+    await expect(page.locator('#ok-body')).toHaveAttribute('translate', 'no');
+  });
+
+  test('a promo path without kind still uses promo copy', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ actionText: '20 REALU extra' }),
+      }),
+    );
+    await page.goto('/promo/EVT1');
+    await expect(page.locator('#ok-title')).toHaveText('Promo-Code');
+    await expect(page.locator('#ok-title')).not.toHaveAttribute('translate');
+    await expect(page.locator('#ok-body')).toHaveText('20 REALU extra');
+    await expect(page.locator('#ok-body')).toHaveAttribute('translate', 'no');
+  });
+
+  test('an invite path with campaign text and no kind still renders as promo', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ actionText: '20 REALU extra' }),
+      }),
+    );
+    await page.goto('/invite/EVT1');
+    await expect(page.locator('#ok-title')).toHaveText('Promo-Code');
+    await expect(page.locator('#ok-body')).toHaveText('20 REALU extra');
+  });
+
+  test('a promo path renders the API action text 1:1', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ kind: 'promo', actionText: '20 REALU extra' }),
+      }),
+    );
+    await page.goto('/promo/EVT1');
+    await expect(page.locator('#ok-body')).toHaveText('20 REALU extra');
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'href',
+      'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=promo%3DEVT1',
+    );
+  });
+
+  test('a promo path with lang=en prefers campaignTextEn', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'Promo',
+          actionText: 'DE Aktion',
+          campaignTextEn: 'EN campaign',
+        }),
+      }),
+    );
+    await page.goto('/promo/EVT1?lang=en');
+    await expect(page.locator('#ok-body')).toHaveText('EN campaign');
+    await expect(page.locator('#ok-body')).not.toHaveAttribute('lang');
+  });
+
+  test('an English landing marks German promo fallback with lang=de', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ kind: 'promo', actionText: 'DE Aktion' }),
+      }),
+    );
+    await page.goto('/promo/EVT1?lang=en');
+    await expect(page.locator('#ok-body')).toHaveText('DE Aktion');
+    await expect(page.locator('#ok-body')).toHaveAttribute('lang', 'de');
+  });
+
+  test('an English invite landing uses the inviter greeting, not leftover actionText', async ({
+    page,
+  }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+          actionText: 'DE action',
+          actionTextEn: 'EN action',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD?lang=en');
+    await expect(page.locator('#ok-body')).toHaveText('Björn is inviting you to RealUnit.');
+    await expect(page.locator('#ok-body')).not.toHaveAttribute('lang');
+  });
+
+  test('an English invite landing ignores leftover German actionText', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'invite',
+          inviterName: 'Björn',
+          inviteeName: 'Alice',
+          actionText: 'DE action',
+        }),
+      }),
+    );
+    await page.goto('/invite/AB12CD?lang=en');
+    await expect(page.locator('#ok-body')).toHaveText('Björn is inviting you to RealUnit.');
+    await expect(page.locator('#ok-body')).not.toHaveAttribute('lang');
+  });
+
+  test('a promo payload without action text uses the fallback body', async ({ page }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ kind: 'promo' }),
+      }),
+    );
+    await page.goto('/promo/EVT1');
+    await expect(page.locator('#ok-body')).toHaveText(
+      'Öffne die App, um den Promo-Code zu übernehmen.',
+    );
+  });
+
+  test('Smart App Banner skips a foreign code= and uses a later invite=', async ({ page }) => {
+    await page.route('**/invite/invite.js', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: '',
+      }),
+    );
+    await page.goto('/invite?code=https://example.com/foo&invite=AB12CD&mock=1');
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+  });
+
+  test('Smart App Banner skips a foreign nested code= inside utm_content', async ({ page }) => {
+    await page.route('**/invite/invite.js', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: '',
+      }),
+    );
+    await page.goto(
+      '/invite?utm_content=' +
+        encodeURIComponent(
+          'https://realunit.app/invite?code=https://example.com/foo&invite=AB12CD',
+        ) +
+        '&mock=1',
+    );
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+  });
+
+  test('Smart App Banner skips a campaign utm_content and uses a later wrapper key', async ({
+    page,
+  }) => {
+    await page.route('**/invite/invite.js', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: '',
+      }),
+    );
+    await page.goto(
+      '/invite?utm_content=summer-sale&link=' +
+        encodeURIComponent('https://realunit.app/invite/AB12CD') +
+        '&mock=1',
+    );
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+  });
+
+  test('Smart App Banner unwraps email link= and ios-app utm_content', async ({ page }) => {
+    await page.route('**/invite/invite.js', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: '',
+      }),
+    );
+    await page.goto(
+      '/invite?link=' + encodeURIComponent('https://realunit.app/invite/AB12CD') + '&mock=1',
+    );
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+    await page.goto(
+      '/invite?utm_content=' + encodeURIComponent('ios-app://6759720010/invite/AB12CD') + '&mock=1',
+    );
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+    await page.goto('/invite?link=hello&mock=1');
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010',
+    );
+  });
+
+  test('Smart App Banner carries the code before invite.js runs', async ({ page }) => {
+    await page.route('**/invite/invite.js', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: '',
+      }),
+    );
+    await page.goto('/invite/AB12CD?mock=1');
+    await expect(page.locator('script[src="/js/invite-banner.js"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="format-detection"]')).toHaveAttribute(
+      'content',
+      'telephone=no, date=no',
+    );
+    await expect(page.locator('#ok-code')).toHaveAttribute('x-apple-data-detectors', 'false');
+    await expect(page.locator('#ok-body')).toHaveAttribute('x-apple-data-detectors', 'false');
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+    await page.goto('/promo/EVT1?mock=1');
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://promo/EVT1',
+    );
+  });
+
+  test('without the head banner script the HTML already carries app-argument', async ({ page }) => {
+    await page.route('**/js/invite-banner.js', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: '',
+      }),
+    );
+    await page.route('**/invite/invite.js', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: '',
+      }),
+    );
+    await page.goto('/invite/AB12CD?mock=1');
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      'app-id=6759720010, app-argument=realunit-wallet://invite/AB12CD',
+    );
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      /\/invite\/AB12CD$/,
+    );
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+      'content',
+      /\/invite\/AB12CD$/,
+    );
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'href',
+      /referrer=invite%3DAB12CD/,
+    );
+    await expect(page.locator('link[rel="alternate"][data-android-app]')).toHaveAttribute(
+      'href',
+      'android-app://swiss.realunit.app/https/realunit.app/invite/AB12CD',
+    );
+    await expect(page.locator('link[rel="alternate"][data-ios-app]')).toHaveAttribute(
+      'href',
+      'ios-app://6759720010/realunit-wallet/invite/AB12CD',
+    );
+    await expect(page.locator('meta[name="twitter:url"]')).toHaveAttribute(
+      'content',
+      /\/invite\/AB12CD$/,
+    );
+    await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute(
+      'content',
+      'RealUnit',
+    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      'content',
+      'RealUnit — Einladung AB12CD',
+    );
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
+      'content',
+      'RealUnit — Einladung AB12CD',
+    );
+    await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute(
+      'content',
+      'RealUnit — Einladung AB12CD',
+    );
+    await expect(page.locator('meta[name="twitter:image:alt"]')).toHaveAttribute(
+      'content',
+      'RealUnit — Einladung AB12CD',
+    );
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+      'content',
+      'Öffne die RealUnit-App mit dem Code AB12CD.',
+    );
+    await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute(
+      'content',
+      'Öffne die RealUnit-App mit dem Code AB12CD.',
+    );
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      'content',
+      'Öffne die RealUnit-App mit dem Code AB12CD.',
+    );
+    await expect(page.locator('meta[property="al:ios:url"]')).toHaveAttribute(
+      'content',
+      'realunit-wallet://invite/AB12CD',
+    );
+    await expect(page.locator('meta[property="al:ios:app_store_id"]')).toHaveAttribute(
+      'content',
+      '6759720010',
+    );
+    await expect(page.locator('meta[property="al:android:package"]')).toHaveAttribute(
+      'content',
+      'swiss.realunit.app',
+    );
+    await expect(page.locator('meta[property="al:android:class"]')).toHaveAttribute(
+      'content',
+      'swiss.realunit.app.MainActivity',
+    );
+    await expect(page.locator('meta[property="al:android:url"]')).toHaveAttribute(
+      'content',
+      'realunit-wallet://invite/AB12CD',
+    );
+    await expect(page.locator('meta[property="al:web:url"]')).toHaveAttribute(
+      'content',
+      /\/invite\/AB12CD$/,
+    );
+    await expect(page.locator('meta[name="twitter:app:url:iphone"]')).toHaveAttribute(
+      'content',
+      'realunit-wallet://invite/AB12CD',
+    );
+    await expect(page.locator('meta[name="twitter:app:id:iphone"]')).toHaveAttribute(
+      'content',
+      '6759720010',
+    );
+    await expect(page.locator('meta[name="twitter:app:url:googleplay"]')).toHaveAttribute(
+      'content',
+      'realunit-wallet://invite/AB12CD',
+    );
+    await expect(page.locator('meta[name="twitter:app:id:googleplay"]')).toHaveAttribute(
+      'content',
+      'swiss.realunit.app',
+    );
+    await expect(page.locator('meta[name="twitter:app:country"]')).toHaveAttribute('content', 'CH');
+    await page.goto('/invite/AB12CD?mock=1&lang=en');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute('content', 'en_GB');
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      'content',
+      'RealUnit — Invitation AB12CD',
+    );
+    await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute(
+      'content',
+      'RealUnit — Invitation AB12CD',
+    );
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+      'content',
+      'Open the RealUnit app with code AB12CD.',
+    );
+  });
+
+  test('?mock=1 does not call the API and greets the invitee', async ({ page }) => {
+    const calls = [];
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      calls.push(route.request().url());
+      route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/invite/AB12CD?mock=1');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-title')).toHaveText('Hey Alice');
+    expect(calls).toEqual([]);
+  });
+
+  test('?mock=spent shows already-used copy without calling the API', async ({ page }) => {
+    const calls = [];
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      calls.push(route.request().url());
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/invite/AB12CD?mock=spent');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    await expect(page.locator('#invalid-title')).toHaveText('Code bereits eingelöst');
+    await expect(page.locator('#invalid-body')).toHaveText(/bereits verwendet/);
+    await page.goto('/invite/AB12CD?mock=spent&lang=en');
+    await expect(page.locator('#invalid-title')).toHaveText('Code already used');
+    await page.goto('/promo/EVT1?mock=spent&lang=de');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    await expect(page.locator('#invalid-title')).toHaveText('Code bereits eingelöst');
+    await expect(page.locator('#invalid-body')).toHaveText(/bereits verwendet/);
+    expect(calls).toEqual([]);
+  });
+
+  test('?mock=invalid and ?mock=unavailable skip the API', async ({ page }) => {
+    const calls = [];
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      calls.push(route.request().url());
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/invite/AB12CD?mock=invalid');
+    await expect(page.locator('#state-invalid')).toBeVisible();
+    await expect(page.locator('#invalid-home')).toHaveText('Zur Startseite');
+    await page.goto('/invite/AB12CD?mock=invalid&lang=en');
+    await expect(page.locator('#invalid-home')).toHaveText('Back to homepage');
+    await expect(page.locator('#invalid-home')).toHaveAttribute('href', '/');
+    await page.goto('/promo/EVT1?mock=unavailable');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#unavailable-home')).toHaveText('Zur Startseite');
+    await page.goto('/promo/EVT1?mock=unavailable&lang=en');
+    await expect(page.locator('#unavailable-home')).toHaveText('Back to homepage');
+    await expect(page.locator('#unavailable-home')).toHaveAttribute('href', '/');
+    expect(calls).toEqual([]);
+  });
+
+  test('promo mock copy includes the 200 REALU first-purchase floor', async ({ page }) => {
+    await page.goto('/promo/EVT1?mock=1');
+    await expect(page.locator('#ok-body')).toHaveText(/mindestens 200 RealUnit-Aktientoken/);
+    await expect(page.locator('#ok-body')).toHaveText(/begrenzt auf 100 Einlösungen/);
+  });
+
+  test('promo mock with lang=en uses campaignTextEn', async ({ page }) => {
+    await page.goto('/promo/EVT1?mock=1&lang=en');
+    await expect(page.locator('#ok-body')).toHaveText(/at least 200 RealUnit share tokens/);
+    await expect(page.locator('#ok-body')).toHaveText(/limited to 100 redemptions/);
+  });
+
+  test('English landings localize store badge labels', async ({ page }) => {
+    await page.goto('/invite/AB12CD?mock=1&lang=en');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute('content', 'en_GB');
+    await expect(page.locator('meta[property="og:locale:alternate"]')).toHaveAttribute(
+      'content',
+      'de_CH',
+    );
+    await expect(page.locator('nav.stores')).toHaveAttribute('aria-label', 'Download the app');
+    await expect(page.locator('a[data-store="apple"]')).toHaveAttribute(
+      'aria-label',
+      'Get RealUnit on the App Store',
+    );
+    await expect(page.locator('a[data-store="play"]')).toHaveAttribute(
+      'aria-label',
+      'Get RealUnit on Google Play',
+    );
+    await expect(page.locator('a[data-store="apple"] img')).toHaveAttribute('alt', '');
+    await expect(page.locator('a[data-store="play"] img')).toHaveAttribute('alt', '');
+  });
+});
