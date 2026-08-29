@@ -235,6 +235,12 @@ export const VIEWS = [
     projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
+    slug: 'invite-spent-en',
+    path: '/invite/AB12CD?mock=spent&lang=en',
+    waitFor: 'invalid',
+    projects: ['desktop-chromium'],
+  },
+  {
     slug: 'promo-ok',
     path: '/promo/EVT1?mock=1&lang=de',
     waitFor: 'ok',
@@ -283,6 +289,12 @@ export const VIEWS = [
     path: '/promo/EVT1?mock=spent&lang=de',
     waitFor: 'invalid',
     projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
+  },
+  {
+    slug: 'promo-spent-en',
+    path: '/promo/EVT1?mock=spent&lang=en',
+    waitFor: 'invalid',
+    projects: ['desktop-chromium'],
   },
 ];
 
