@@ -1835,6 +1835,27 @@ test.describe('invite and promo landing', () => {
     expect(calls).toEqual([]);
   });
 
+  test('?mock=fallback uses nameless invite and promo copy without calling the API', async ({
+    page,
+  }) => {
+    const calls = [];
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      calls.push(route.request().url());
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/invite/AB12CD?mock=fallback');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-title')).toHaveText('Du bist eingeladen');
+    await expect(page.locator('#ok-body')).toHaveText('Du bist zu RealUnit eingeladen.');
+    await page.goto('/promo/EVT1?mock=fallback');
+    await expect(page.locator('#state-ok')).toBeVisible();
+    await expect(page.locator('#ok-title')).toHaveText('Promo-Code');
+    await expect(page.locator('#ok-body')).toHaveText(
+      'Öffne die App, um den Promo-Code zu übernehmen.',
+    );
+    expect(calls).toEqual([]);
+  });
+
   test('?mock=loading stays on the loading state and does not call the API', async ({ page }) => {
     const calls = [];
     await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
