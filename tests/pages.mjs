@@ -292,6 +292,13 @@ export const VIEWS = [
     projects: ['desktop-chromium'],
   },
   {
+    slug: 'invite-spent-android',
+    path: '/invite/AB12CD?mock=spent&lang=de',
+    platform: 'android',
+    waitFor: 'invalid',
+    projects: ['mobile-safari'],
+  },
+  {
     slug: 'promo-ok',
     path: '/promo/EVT1?mock=1&lang=de',
     waitFor: 'ok',
@@ -397,6 +404,13 @@ export const VIEWS = [
     path: '/promo/EVT1?mock=spent&lang=en',
     waitFor: 'invalid',
     projects: ['desktop-chromium'],
+  },
+  {
+    slug: 'promo-spent-android',
+    path: '/promo/EVT1?mock=spent&lang=de',
+    platform: 'android',
+    waitFor: 'invalid',
+    projects: ['mobile-safari'],
   },
 ];
 
