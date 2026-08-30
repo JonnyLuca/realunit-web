@@ -236,6 +236,12 @@ export const VIEWS = [
     projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
+    slug: 'invite-ok-fallback-en',
+    path: '/invite/AB12CD?mock=fallback&lang=en',
+    waitFor: 'ok',
+    projects: ['desktop-chromium'],
+  },
+  {
     slug: 'invite-invalid',
     path: '/invite/AB12CD?mock=invalid&lang=de',
     waitFor: 'invalid',
@@ -361,6 +367,12 @@ export const VIEWS = [
     path: '/promo/EVT1?mock=fallback&lang=de',
     waitFor: 'ok',
     projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
+  },
+  {
+    slug: 'promo-ok-fallback-en',
+    path: '/promo/EVT1?mock=fallback&lang=en',
+    waitFor: 'ok',
+    projects: ['desktop-chromium'],
   },
   {
     slug: 'promo-invalid',
