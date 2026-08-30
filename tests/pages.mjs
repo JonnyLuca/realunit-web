@@ -320,6 +320,13 @@ export const VIEWS = [
     projects: ['mobile-safari'],
   },
   {
+    slug: 'invite-unavailable-en-android',
+    path: '/invite/AB12CD?mock=unavailable&lang=en',
+    platform: 'android',
+    waitFor: 'unavailable',
+    projects: ['mobile-safari'],
+  },
+  {
     slug: 'invite-spent',
     path: '/invite/AB12CD?mock=spent&lang=de',
     waitFor: 'invalid',
@@ -469,6 +476,13 @@ export const VIEWS = [
   {
     slug: 'promo-unavailable-android',
     path: '/promo/EVT1?mock=unavailable&lang=de',
+    platform: 'android',
+    waitFor: 'unavailable',
+    projects: ['mobile-safari'],
+  },
+  {
+    slug: 'promo-unavailable-en-android',
+    path: '/promo/EVT1?mock=unavailable&lang=en',
     platform: 'android',
     waitFor: 'unavailable',
     projects: ['mobile-safari'],
