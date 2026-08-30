@@ -1835,6 +1835,21 @@ test.describe('invite and promo landing', () => {
     expect(calls).toEqual([]);
   });
 
+  test('?mock=loading stays on the loading state and does not call the API', async ({ page }) => {
+    const calls = [];
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      calls.push(route.request().url());
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await page.goto('/invite/AB12CD?mock=loading');
+    await expect(page.locator('#state-loading')).toBeVisible();
+    await expect(page.locator('#loading-title')).toHaveText('Einladung wird geladen…');
+    await page.goto('/promo/EVT1?mock=loading');
+    await expect(page.locator('#state-loading')).toBeVisible();
+    await expect(page.locator('#loading-title')).toHaveText('Promo-Code wird geladen…');
+    expect(calls).toEqual([]);
+  });
+
   test('?mock=spent shows already-used copy without calling the API', async ({ page }) => {
     const calls = [];
     await page.route(REFERRAL_CODE_ENDPOINT, (route) => {

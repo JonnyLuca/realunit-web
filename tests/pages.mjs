@@ -191,6 +191,12 @@ export const VIEWS = [
     projects: ['desktop-chromium', 'tablet-chromium'],
   },
   {
+    slug: 'invite-loading',
+    path: '/invite/AB12CD?mock=loading&lang=de',
+    waitFor: 'loading',
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
+  },
+  {
     slug: 'invite-ok-ios',
     path: '/invite/AB12CD?mock=1&lang=de',
     platform: 'ios',
@@ -263,6 +269,12 @@ export const VIEWS = [
     path: '/promo/EVT1?mock=1&lang=de',
     waitFor: 'ok',
     projects: ['desktop-chromium', 'tablet-chromium'],
+  },
+  {
+    slug: 'promo-loading',
+    path: '/promo/EVT1?mock=loading&lang=de',
+    waitFor: 'loading',
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'promo-ok-ios',

@@ -650,8 +650,9 @@
     );
   }
 
-  // Local preview only (?mock=1|invalid|spent|unavailable). Never honored on
-  // realunit.app / dev.realunit.app, so a shared prod link cannot spoof state.
+  // Local preview only (?mock=1|invalid|spent|unavailable|loading). Never
+  // honored on realunit.app / dev.realunit.app, so a shared prod link cannot
+  // spoof state.
   var mock = params.get('mock');
   if (mock && !core.isRealUnitHost(window.location.hostname)) {
     if (mock === 'invalid') {
@@ -660,6 +661,8 @@
       render({ state: 'invalid', code: 'SPENT' });
     } else if (mock === 'unavailable') {
       render({ state: 'unavailable' });
+    } else if (mock === 'loading') {
+      show('state-loading');
     } else {
       render(
         core.mapResult(
