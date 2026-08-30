@@ -223,6 +223,12 @@ export const VIEWS = [
     projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
+    slug: 'invite-missing-code-en',
+    path: '/invite?lang=en',
+    waitFor: 'invalid',
+    projects: ['desktop-chromium'],
+  },
+  {
     slug: 'invite-invalid-en',
     path: '/invite/AB12CD?mock=invalid&lang=en',
     waitFor: 'invalid',
@@ -289,6 +295,12 @@ export const VIEWS = [
     path: '/promo',
     waitFor: 'invalid',
     projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
+  },
+  {
+    slug: 'promo-missing-code-en',
+    path: '/promo?lang=en',
+    waitFor: 'invalid',
+    projects: ['desktop-chromium'],
   },
   {
     slug: 'promo-invalid-en',
