@@ -867,6 +867,22 @@ describe('URLs', () => {
 });
 
 describe('mapResult', () => {
+  test('uses backend inviterName and inviteeName for invite copy', () => {
+    const result = mapResult(200, {
+      kind: 'invite',
+      inviterName: 'Ada',
+      inviteeName: 'Grace',
+      hostDisplayName: 'Legacy host',
+      guestName: 'Legacy guest',
+    });
+
+    expect(result.payload.inviterName).toBe('Ada');
+    expect(result.payload.inviteeName).toBe('Grace');
+    expect(core.inviteLandingBody(result.payload, { 'invite.body': 'Hey {inviter}' })).toBe(
+      'Hey Ada',
+    );
+  });
+
   test('404/400/409/410/422 are invalid, other errors unavailable, promo vs invite from the body', () => {
     expect(mapResult(404, {})).toEqual({ state: 'invalid' });
     expect(mapResult(400, {})).toEqual({ state: 'invalid' });
