@@ -355,10 +355,20 @@ export function canonicalLandingHref(urlLike) {
   return requestOrigin(urlLike) + path;
 }
 
+function htmlEscape(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function replaceTaggedAttr(html, namedRe, flippedRe, value) {
-  const named = html.replace(namedRe, '$1' + value + '$3');
+  const rep = (m, p1, _p2, p3) => p1 + value + p3;
+  const named = html.replace(namedRe, rep);
   if (named !== html) return named;
-  return html.replace(flippedRe, '$1' + value + '$3');
+  return html.replace(flippedRe, rep);
 }
 
 export function injectLandingCanonicalHtml(html, href) {
@@ -408,19 +418,22 @@ export function injectShareTitleHtml(html, kind, code, lang) {
   if (typeof html !== 'string') return html;
   const title = shareTitle(kind, code, lang);
   if (!title) return html;
+  const safe = htmlEscape(title);
   let out = replaceTaggedAttr(
     html,
     /(<meta\b[^>]*\bproperty=["']og:title["'][^>]*\bcontent=["'])([^"']*)(["'][^>]*>)/i,
     /(<meta\b[^>]*\bcontent=["'])([^"']*)(["'][^>]*\bproperty=["']og:title["'][^>]*>)/i,
-    title,
+    safe,
   );
   out = replaceTaggedAttr(
     out,
     /(<meta\b[^>]*\bname=["']twitter:title["'][^>]*\bcontent=["'])([^"']*)(["'][^>]*>)/i,
     /(<meta\b[^>]*\bcontent=["'])([^"']*)(["'][^>]*\bname=["']twitter:title["'][^>]*>)/i,
-    title,
+    safe,
   );
-  return out.replace(/<title>[^<]*<\/title>/i, '<title>' + title + '</title>');
+  return out.replace(/<title>[^<]*<\/title>/i, function () {
+    return '<title>' + safe + '</title>';
+  });
 }
 
 /** Crawlers snapshot og:image:alt / twitter:image:alt from the HTML bytes. */
@@ -428,17 +441,18 @@ export function injectShareImageAltHtml(html, kind, code, lang) {
   if (typeof html !== 'string') return html;
   const alt = shareTitle(kind, code, lang);
   if (!alt) return html;
+  const safe = htmlEscape(alt);
   let out = replaceTaggedAttr(
     html,
     /(<meta\b[^>]*\bproperty=["']og:image:alt["'][^>]*\bcontent=["'])([^"']*)(["'][^>]*>)/i,
     /(<meta\b[^>]*\bcontent=["'])([^"']*)(["'][^>]*\bproperty=["']og:image:alt["'][^>]*>)/i,
-    alt,
+    safe,
   );
   return replaceTaggedAttr(
     out,
     /(<meta\b[^>]*\bname=["']twitter:image:alt["'][^>]*\bcontent=["'])([^"']*)(["'][^>]*>)/i,
     /(<meta\b[^>]*\bcontent=["'])([^"']*)(["'][^>]*\bname=["']twitter:image:alt["'][^>]*>)/i,
-    alt,
+    safe,
   );
 }
 
@@ -453,23 +467,24 @@ export function injectShareDescriptionHtml(html, code, lang) {
   if (typeof html !== 'string') return html;
   const description = shareDescription(code, lang);
   if (!description) return html;
+  const safe = htmlEscape(description);
   let out = replaceTaggedAttr(
     html,
     /(<meta\b[^>]*\bproperty=["']og:description["'][^>]*\bcontent=["'])([^"']*)(["'][^>]*>)/i,
     /(<meta\b[^>]*\bcontent=["'])([^"']*)(["'][^>]*\bproperty=["']og:description["'][^>]*>)/i,
-    description,
+    safe,
   );
   out = replaceTaggedAttr(
     out,
     /(<meta\b[^>]*\bname=["']twitter:description["'][^>]*\bcontent=["'])([^"']*)(["'][^>]*>)/i,
     /(<meta\b[^>]*\bcontent=["'])([^"']*)(["'][^>]*\bname=["']twitter:description["'][^>]*>)/i,
-    description,
+    safe,
   );
   return replaceTaggedAttr(
     out,
     /(<meta\b[^>]*\bname=["']description["'][^>]*\bcontent=["'])([^"']*)(["'][^>]*>)/i,
     /(<meta\b[^>]*\bcontent=["'])([^"']*)(["'][^>]*\bname=["']description["'][^>]*>)/i,
-    description,
+    safe,
   );
 }
 

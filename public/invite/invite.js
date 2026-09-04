@@ -621,11 +621,12 @@
       document.title = copy['doc.title.promo'];
       setText('ok-title', copy['promo.title']);
       setNoTranslate(okTitleEl, false);
-      var promoText = String(core.promoBody(payload, lang) || '').trim();
+      var promoText = String(core.promoBody(payload, lang) || '');
+      var promoHasText = promoText.trim().length > 0;
       setOkBody(
-        promoText || copy['promo.body.fallback'],
-        promoText ? core.promoBodyLang(payload, lang) : lang,
-        !!promoText,
+        promoHasText ? promoText : copy['promo.body.fallback'],
+        promoHasText ? core.promoBodyLang(payload, lang) : lang,
+        promoHasText,
       );
     } else {
       setPitch('invite');
@@ -744,14 +745,18 @@
 
     fetch(url, core.lookupFetchInit(abort.signal))
       .then(function (res) {
-        return res.json().then(
-          function (body) {
-            return { status: res.status, body: body };
-          },
-          function () {
-            return { status: res.status, body: null };
-          },
-        );
+        // Read the body as text first: an unmounted NestJS route answers with a
+        // plain-text "Cannot GET ..." 404, not JSON. Wrap that text as { message }
+        // so mapResult treats it as 'unavailable' instead of 'invalid'.
+        return res.text().then(function (text) {
+          var body;
+          try {
+            body = text ? JSON.parse(text) : null;
+          } catch (e) {
+            body = text ? { message: text } : null;
+          }
+          return { status: res.status, body: body };
+        });
       })
       .then(function (r) {
         if (abort !== lookupAbort || timedOut) return;
