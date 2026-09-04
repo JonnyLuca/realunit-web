@@ -200,7 +200,7 @@ export const VIEWS = [
     slug: 'invite-loading-en',
     path: '/invite/AB12CD?mock=loading&lang=en',
     waitFor: 'loading',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'invite-loading-android',
@@ -284,7 +284,7 @@ export const VIEWS = [
     slug: 'invite-invalid-en',
     path: '/invite/AB12CD?mock=invalid&lang=en',
     waitFor: 'invalid',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'invite-invalid-android',
@@ -310,7 +310,7 @@ export const VIEWS = [
     slug: 'invite-unavailable-en',
     path: '/invite/AB12CD?mock=unavailable&lang=en',
     waitFor: 'unavailable',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'invite-unavailable-android',
@@ -361,7 +361,7 @@ export const VIEWS = [
     slug: 'promo-loading-en',
     path: '/promo/EVT1?mock=loading&lang=en',
     waitFor: 'loading',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'promo-loading-android',
@@ -445,7 +445,7 @@ export const VIEWS = [
     slug: 'promo-invalid-en',
     path: '/promo/EVT1?mock=invalid&lang=en',
     waitFor: 'invalid',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'promo-invalid-android',
@@ -471,7 +471,7 @@ export const VIEWS = [
     slug: 'promo-unavailable-en',
     path: '/promo/EVT1?mock=unavailable&lang=en',
     waitFor: 'unavailable',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'promo-unavailable-android',
