@@ -364,6 +364,11 @@ function htmlEscape(value) {
     .replace(/'/g, '&#39;');
 }
 
+// Splices `value` into a tagged attribute WITHOUT escaping: text sinks are
+// pre-escaped by the caller (htmlEscape) and URL sinks pass through raw, so a
+// store URL keeps its literal `&referrer=`. The browser mirror in
+// public/js/lib/invite-core.js escapes inside the helper instead (emitting
+// `&amp;referrer=`); both are valid — keep the divergence deliberate.
 function replaceTaggedAttr(html, namedRe, flippedRe, value) {
   const rep = (m, p1, _p2, p3) => p1 + value + p3;
   const named = html.replace(namedRe, rep);

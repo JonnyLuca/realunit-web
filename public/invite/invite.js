@@ -753,7 +753,12 @@
           try {
             body = text ? JSON.parse(text) : null;
           } catch (e) {
-            body = text ? { message: text } : null;
+            // Only a non-2xx text body (an unmounted NestJS "Cannot GET"
+            // 404) is wrapped for mapResult to classify; a 2xx with a
+            // non-JSON body stays bodyless so it falls through to the safe
+            // 'unavailable' state rather than a false-positive success page.
+            var nonOk = res.status < 200 || res.status >= 300;
+            body = nonOk && text ? { message: text } : null;
           }
           return { status: res.status, body: body };
         });

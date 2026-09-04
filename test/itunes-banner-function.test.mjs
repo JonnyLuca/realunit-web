@@ -496,7 +496,7 @@ describe('injectLandingFromRequestUrl', () => {
   });
 });
 
-describe('referral code injection hardening (orchestrator)', () => {
+describe('referral code injection hardening', () => {
   const base =
     '<html><head><title>x</title>' +
     '<meta property="og:title" content="old">' +
@@ -517,6 +517,33 @@ describe('referral code injection hardening (orchestrator)', () => {
 
   test('injectShareTitleHtml escapes a raw code and never breaks the attribute', () => {
     const out = injectShareTitleHtml(base, 'invite', 'A"><B', 'de');
+    expect(out).not.toContain('<B');
+    expect(out).not.toMatch(/content="[^"]*A"><B/);
+    expect(out).toContain('&quot;');
+    expect(out).toContain('&lt;');
+    expect(out).toContain('&gt;');
+  });
+
+  test('injectShareImageAltHtml escapes a raw code in both alt sinks', () => {
+    const altBase =
+      '<html><head>' +
+      '<meta property="og:image:alt" content="old">' +
+      '<meta name="twitter:image:alt" content="old"></head><body></body></html>';
+    const out = injectShareImageAltHtml(altBase, 'invite', 'A"><B', 'de');
+    expect(out).not.toContain('<B');
+    expect(out).not.toMatch(/content="[^"]*A"><B/);
+    expect(out).toContain('&quot;');
+    expect(out).toContain('&lt;');
+    expect(out).toContain('&gt;');
+  });
+
+  test('injectShareDescriptionHtml escapes a raw code in the description sinks', () => {
+    const descBase =
+      '<html><head>' +
+      '<meta property="og:description" content="old">' +
+      '<meta name="twitter:description" content="old">' +
+      '<meta name="description" content="old"></head><body></body></html>';
+    const out = injectShareDescriptionHtml(descBase, 'A"><B', 'de');
     expect(out).not.toContain('<B');
     expect(out).not.toMatch(/content="[^"]*A"><B/);
     expect(out).toContain('&quot;');

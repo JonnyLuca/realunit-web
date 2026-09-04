@@ -640,6 +640,28 @@ describe('URLs', () => {
     );
   });
 
+  test('a reflected code is escaped in the browser share sinks', () => {
+    const path = '/invite/' + encodeURIComponent('A"><B');
+    const titleOut = injectShareTitleHtml(
+      '<meta property="og:title" content="old" /><title>old</title>',
+      path,
+      '',
+      '',
+    );
+    expect(titleOut).not.toContain('"><B');
+    expect(titleOut).toContain('&lt;');
+    expect(titleOut).toContain('&gt;');
+    const descOut = injectShareDescriptionHtml(
+      '<meta property="og:description" content="old" />',
+      path,
+      '',
+      '',
+    );
+    expect(descOut).not.toContain('"><B');
+    expect(descOut).toContain('&lt;');
+    expect(descOut).toContain('&gt;');
+  });
+
   test('injectShareLocaleHtml sets html lang and og:locale from ?lang=en', () => {
     expect(langFromSearch('?lang=en')).toBe('en');
     expect(langFromSearch('?lang=de')).toBe('de');

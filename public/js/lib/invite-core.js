@@ -917,6 +917,12 @@
       .replace(/'/g, '&#39;');
   }
 
+  // Splices `value` into a tagged attribute AND escapes it here
+  // (htmlAttrEscape): text sinks are made safe, and URL sinks are
+  // HTML-attribute-encoded (a store URL's `&referrer=` becomes
+  // `&amp;referrer=`, which the browser decodes back). The server mirror in
+  // functions/lib/itunes-banner.js escapes at the call site and keeps URLs
+  // raw instead; both are valid — keep the divergence deliberate.
   function replaceTaggedAttr(html, namedRe, flippedRe, value) {
     var safe = htmlAttrEscape(value);
     var rep = function (m, p1, p2, p3) {

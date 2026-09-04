@@ -1944,9 +1944,7 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('a[data-store="play"] img')).toHaveAttribute('alt', '');
   });
 
-  test('a plain-text "Cannot GET" 404 is unavailable, not invalid (orchestrator)', async ({
-    page,
-  }) => {
+  test('a plain-text "Cannot GET" 404 is unavailable, not invalid', async ({ page }) => {
     await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
       route.fulfill({
         status: 404,
@@ -1959,9 +1957,7 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#state-invalid')).toBeHidden();
   });
 
-  test('the promo action text is rendered verbatim, not trimmed (orchestrator)', async ({
-    page,
-  }) => {
+  test('the promo action text is rendered verbatim, not trimmed', async ({ page }) => {
     const padded = '  20 REALU extra - jetzt einloesen  ';
     await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
       route.fulfill({
@@ -1973,5 +1969,20 @@ test.describe('invite and promo landing', () => {
     await page.goto('/promo/EVT1');
     await expect(page.locator('#ok-body')).toBeVisible();
     expect(await page.locator('#ok-body').textContent()).toBe(padded);
+  });
+
+  test('a 200 response with a non-JSON body is unavailable, not a false success', async ({
+    page,
+  }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'text/html; charset=utf-8',
+        body: '<html><body>proxy error</body></html>',
+      }),
+    );
+    await page.goto('/invite/TEST');
+    await expect(page.locator('#state-unavailable')).toBeVisible();
+    await expect(page.locator('#ok-body')).toBeHidden();
   });
 });

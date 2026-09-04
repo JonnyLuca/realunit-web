@@ -52,10 +52,8 @@ uploaded to Cloudflare Pages.
 - `public/.well-known/apple-app-site-association` and `assetlinks.json` — Universal
   Links / App Links for `/invite/*` and `/promo/*` on apex and www (HTTP 200,
   no 301). `sha256_cert_fingerprints`
-  lists (1) the v2 signing cert of GitHub release APK `realunit-1.2.17.apk`
-  (`O=DFX AG`, `CN=Konstantin Ullrich`) and (2) the Android debug keystore
-  used by the `pixel_jonny` AVD (`C=US, O=Android, CN=Android Debug`) so
-  debug App Links against `dev.realunit.app` verify. If Play App Signing uses
+  lists the v2 signing cert of GitHub release APK `realunit-1.2.17.apk`
+  (`O=DFX AG`, `CN=Konstantin Ullrich`). If Play App Signing uses
   a different app-signing key, add that SHA-256 from Play Console beside them.
 - `public/platform.js` — enlarges the store button matching the visitor's platform
   (iOS → App Store, Android → Play Store); without JS all buttons stay equal-size
