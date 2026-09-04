@@ -908,10 +908,23 @@
     return origin + path;
   }
 
+  function htmlAttrEscape(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function replaceTaggedAttr(html, namedRe, flippedRe, value) {
-    var named = html.replace(namedRe, '$1' + value + '$3');
+    var safe = htmlAttrEscape(value);
+    var rep = function (m, p1, p2, p3) {
+      return p1 + safe + p3;
+    };
+    var named = html.replace(namedRe, rep);
     if (named !== html) return named;
-    return html.replace(flippedRe, '$1' + value + '$3');
+    return html.replace(flippedRe, rep);
   }
 
   // Crawlers snapshot og:url / canonical from the HTML bytes. Same
@@ -983,7 +996,9 @@
       /(<meta\b[^>]*\bcontent=["'])([^"']*)(["'][^>]*\bname=["']twitter:title["'][^>]*>)/i,
       title,
     );
-    return withTw.replace(/<title>[^<]*<\/title>/i, '<title>' + title + '</title>');
+    return withTw.replace(/<title>[^<]*<\/title>/i, function () {
+      return '<title>' + htmlAttrEscape(title) + '</title>';
+    });
   }
 
   function injectShareImageAltHtml(html, pathname, search, hash) {

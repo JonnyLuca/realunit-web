@@ -495,3 +495,37 @@ describe('injectLandingFromRequestUrl', () => {
     expect(injectShareLocaleHtml(shell, null)).toBe(shell);
   });
 });
+
+describe('referral code injection hardening (orchestrator)', () => {
+  const base =
+    '<html><head><title>x</title>' +
+    '<meta property="og:title" content="old">' +
+    '<meta name="twitter:title" content="old"></head><body></body></html>';
+
+  test('a reflected code is HTML-escaped, not injected', () => {
+    const out = injectLandingFromRequestUrl(
+      base,
+      'https://realunit.app/invite/AB"><svg onload=alert(1)>',
+    );
+    // The dangerous characters are neutralised (escaped in text sinks,
+    // percent-encoded in URL sinks); the raw injection fragment never appears.
+    expect(out).not.toContain('<svg');
+    expect(out).not.toContain('onload=');
+    expect(out).not.toContain('AB">');
+    expect(out).toContain('AB&quot;&gt;&lt;');
+  });
+
+  test('injectShareTitleHtml escapes a raw code and never breaks the attribute', () => {
+    const out = injectShareTitleHtml(base, 'invite', 'A"><B', 'de');
+    expect(out).not.toContain('<B');
+    expect(out).not.toMatch(/content="[^"]*A"><B/);
+    expect(out).toContain('&quot;');
+    expect(out).toContain('&lt;');
+    expect(out).toContain('&gt;');
+  });
+
+  test('a $ in the value is inserted literally, not as a replacement backreference', () => {
+    const out = injectShareTitleHtml(base, 'promo', '$1$&', 'de');
+    expect(out).toContain('RealUnit — Promo-Code $1$&amp;');
+  });
+});

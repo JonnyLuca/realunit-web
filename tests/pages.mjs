@@ -234,7 +234,7 @@ export const VIEWS = [
     slug: 'invite-ok-en',
     path: '/invite/AB12CD?mock=1&lang=en',
     waitFor: 'ok',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'invite-ok-fallback',
@@ -246,7 +246,7 @@ export const VIEWS = [
     slug: 'invite-ok-fallback-en',
     path: '/invite/AB12CD?mock=fallback&lang=en',
     waitFor: 'ok',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'invite-ok-fallback-android',
@@ -271,7 +271,7 @@ export const VIEWS = [
     slug: 'invite-missing-code-en',
     path: '/invite?lang=en',
     waitFor: 'invalid',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'invite-missing-code-android',
@@ -336,7 +336,7 @@ export const VIEWS = [
     slug: 'invite-spent-en',
     path: '/invite/AB12CD?mock=spent&lang=en',
     waitFor: 'invalid',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'invite-spent-android',
@@ -395,7 +395,7 @@ export const VIEWS = [
     slug: 'promo-ok-en',
     path: '/promo/EVT1?mock=1&lang=en',
     waitFor: 'ok',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'promo-ok-fallback',
@@ -407,7 +407,7 @@ export const VIEWS = [
     slug: 'promo-ok-fallback-en',
     path: '/promo/EVT1?mock=fallback&lang=en',
     waitFor: 'ok',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'promo-ok-fallback-android',
@@ -432,7 +432,7 @@ export const VIEWS = [
     slug: 'promo-missing-code-en',
     path: '/promo?lang=en',
     waitFor: 'invalid',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'promo-missing-code-android',
@@ -497,7 +497,7 @@ export const VIEWS = [
     slug: 'promo-spent-en',
     path: '/promo/EVT1?mock=spent&lang=en',
     waitFor: 'invalid',
-    projects: ['desktop-chromium'],
+    projects: ['desktop-chromium', 'tablet-chromium', 'mobile-safari'],
   },
   {
     slug: 'promo-spent-android',
