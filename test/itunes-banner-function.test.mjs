@@ -532,9 +532,8 @@ describe('referral code injection hardening', () => {
     const out = injectShareImageAltHtml(altBase, 'invite', 'A"><B', 'de');
     expect(out).not.toContain('<B');
     expect(out).not.toMatch(/content="[^"]*A"><B/);
-    expect(out).toContain('&quot;');
-    expect(out).toContain('&lt;');
-    expect(out).toContain('&gt;');
+    // Both alt sinks (og:image:alt + twitter:image:alt) get the escaped code.
+    expect((out.match(/A&quot;&gt;&lt;B/g) || []).length).toBe(2);
   });
 
   test('injectShareDescriptionHtml escapes a raw code in the description sinks', () => {
@@ -546,9 +545,8 @@ describe('referral code injection hardening', () => {
     const out = injectShareDescriptionHtml(descBase, 'A"><B', 'de');
     expect(out).not.toContain('<B');
     expect(out).not.toMatch(/content="[^"]*A"><B/);
-    expect(out).toContain('&quot;');
-    expect(out).toContain('&lt;');
-    expect(out).toContain('&gt;');
+    // All three description sinks (og + twitter + meta) get the escaped code.
+    expect((out.match(/A&quot;&gt;&lt;B/g) || []).length).toBe(3);
   });
 
   test('a $ in the value is inserted literally, not as a replacement backreference', () => {

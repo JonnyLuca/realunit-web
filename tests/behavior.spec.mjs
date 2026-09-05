@@ -1974,15 +1974,18 @@ test.describe('invite and promo landing', () => {
   test('a 200 response with a non-JSON body is unavailable, not a false success', async ({
     page,
   }) => {
-    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
-      route.fulfill({
+    let routeHits = 0;
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) => {
+      routeHits += 1;
+      return route.fulfill({
         status: 200,
         contentType: 'text/html; charset=utf-8',
         body: '<html><body>proxy error</body></html>',
-      }),
-    );
+      });
+    });
     await page.goto('/invite/TEST');
     await expect(page.locator('#state-unavailable')).toBeVisible();
     await expect(page.locator('#ok-body')).toBeHidden();
+    expect(routeHits).toBeGreaterThan(0);
   });
 });

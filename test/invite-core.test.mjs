@@ -660,6 +660,17 @@ describe('URLs', () => {
     expect(descOut).not.toContain('"><B');
     expect(descOut).toContain('&lt;');
     expect(descOut).toContain('&gt;');
+    expect(titleOut).toContain('&quot;');
+    expect(descOut).toContain('&quot;');
+    const altOut = injectShareImageAltHtml(
+      '<meta property="og:image:alt" content="old" />' +
+        '<meta name="twitter:image:alt" content="old" />',
+      path,
+      '',
+      '',
+    );
+    expect(altOut).not.toContain('"><B');
+    expect((altOut.match(/A&quot;&gt;&lt;B/g) || []).length).toBe(2);
   });
 
   test('injectShareLocaleHtml sets html lang and og:locale from ?lang=en', () => {
