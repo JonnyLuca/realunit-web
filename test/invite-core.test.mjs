@@ -166,7 +166,12 @@ describe('parseCodeFromPath', () => {
 
   test('caps the code at 32 characters', () => {
     const long = 'A'.repeat(300);
-    expect(parseCodeFromPath(`/invite/${long}`).code).toHaveLength(32);
+    // Assert the value, not just the length: any 32-character output would
+    // satisfy toHaveLength, including one cut from the wrong end.
+    expect(parseCodeFromPath(`/invite/${long}`).code).toBe('A'.repeat(32));
+    // Two different codes sharing a 32-character prefix must not be capped
+    // onto the same value silently.
+    expect(parseCodeFromPath(`/invite/${'B'.repeat(32)}X`).code).toBe('B'.repeat(32));
   });
 
   test('drops trailing sentence punct like the API sanitizeReferralCode', () => {
@@ -1707,7 +1712,14 @@ describe('remaining branch coverage', () => {
         { pathname: '/invite/AB12CD' },
       ),
     ).toBe(false);
-    const el = { setAttribute() {} };
+    // Capture what is written: the point of the call is the attribute, and a
+    // fixture that throws the value away passes even when nothing is set.
+    const written = [];
+    const el = {
+      setAttribute(name, value) {
+        written.push([name, value]);
+      },
+    };
     expect(
       applyItunesBannerFromLocation(
         {
@@ -1718,6 +1730,7 @@ describe('remaining branch coverage', () => {
         null,
       ),
     ).toBe(true);
+    expect(written).toEqual([['content', 'app-id=6759720010']]);
     expect(core.invalidLandingCopy({ code: 'SPENT' }, {}).title).toBeUndefined();
     expect(core.inviteLandingBody({ inviterName: '' }, I18N.de)).toBe(
       I18N.de['invite.body.fallback'],
@@ -1767,9 +1780,12 @@ describe('remaining branch coverage', () => {
       return origParseInt(value, radix);
     };
     try {
-      expect(codeFromPastedReferralUrl('https://realunit.app/invite/AB12CD\\u0041')).toBeTruthy();
-      expect(codeFromPastedReferralUrl('https://realunit.app/invite/AB12CD&#x41;')).toBeTruthy();
-      expect(codeFromPastedReferralUrl('https://realunit.app/invite/AB12CD&#65;')).toBeTruthy();
+      // Pin the value, not just truthiness: with parseInt stubbed to NaN these
+      // fall back to dropping the escape, and "any non-empty string" would also
+      // accept a half-decoded AB12CD&#X41; or a truncated code.
+      expect(codeFromPastedReferralUrl('https://realunit.app/invite/AB12CD\\u0041')).toBe('AB12CD');
+      expect(codeFromPastedReferralUrl('https://realunit.app/invite/AB12CD&#x41;')).toBe('AB12CD');
+      expect(codeFromPastedReferralUrl('https://realunit.app/invite/AB12CD&#65;')).toBe('AB12CD');
     } finally {
       globalThis.parseInt = origParseInt;
     }

@@ -383,7 +383,12 @@ describe('injectLandingFromRequestUrl', () => {
     const shell =
       '<head></head><a data-store="play" href="https://play.google.com/store/apps/details?id=swiss.realunit.app">Play</a>';
     const out = injectLandingFromRequestUrl(shell, 'https://realunit.app/invite/AB12CD');
-    expect(out).toContain(playStoreUrl('AB12CD', 'invite'));
+    // Literal, not playStoreUrl(...): building the expectation from the same
+    // production helper makes this pass even if the referrer stops being
+    // emitted correctly — and the referrer is what attributes the commission.
+    expect(out).toContain(
+      'https://play.google.com/store/apps/details?id=swiss.realunit.app&referrer=invite%3DAB12CD',
+    );
     expect(out).toContain('data-android-app');
     expect(out).toContain('data-ios-app');
     expect(out).toContain('al:android:url');
