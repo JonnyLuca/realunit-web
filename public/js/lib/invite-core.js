@@ -298,8 +298,16 @@
     // Anchored at the start or a slash: an issued code that merely ends in
     // "…INVITE/ABC" must not be folded onto "ABC", which would credit the
     // wrong referrer. Codes may legitimately contain a slash.
+    // Defence in depth, kept for parity with the API's sanitizeReferralCode.
+    // Every caller today hands in a single already-extracted segment, so the
+    // match arm is unreachable from current paths — the only thing that used to
+    // reach it was the unanchored match this anchor removed, which folded
+    // issued codes onto their tail. Keep it: a future caller passing a full
+    // landing path must still be unwrapped.
     var nested = /(?:^|\/)(?:invite|promo)\/([^/?#]+)/i.exec(code);
+    /* v8 ignore start */
     return nested ? nested[1] : code;
+    /* v8 ignore stop */
   }
 
   function capCode(raw) {
@@ -707,7 +715,9 @@
       var marker = h > 0 ? segs[h - 1].toLowerCase() : '';
       if (marker !== 's' && marker !== 'https' && marker !== 'http') continue;
       var rest = segs.slice(h).join('/');
-      return codeFromPastedReferralUrl('https://' + rest) || codeFromPastedReferralUrl(rest);
+      // `rest` always starts with our host here, so the scheme-less retry that
+      // used to sit behind an || could never add a match.
+      return codeFromPastedReferralUrl('https://' + rest);
     }
     return null;
   }

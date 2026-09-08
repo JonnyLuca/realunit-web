@@ -554,3 +554,24 @@ describe('referral code injection hardening', () => {
     expect(out).toContain('RealUnit — Promo-Code $1$&amp;');
   });
 });
+
+describe('paths the 100% gate now covers on the function module', () => {
+  test('playStoreUrl without a code returns the bare store link', () => {
+    expect(playStoreUrl(null, 'invite')).toBe(playStoreUrl(null, 'promo'));
+    expect(playStoreUrl(null, 'invite')).not.toContain('referrer=');
+    expect(playStoreUrl('', 'invite')).not.toContain('referrer=');
+  });
+
+  test('parseLangFromUrl returns null for an unparseable URL', () => {
+    expect(parseLangFromUrl('http://[')).toBeNull();
+    expect(parseLangFromUrl('https://realunit.app/invite/AB12CD?lang=fr')).toBeNull();
+    expect(parseLangFromUrl('https://realunit.app/invite/AB12CD?lang=en')).toBe('en');
+  });
+
+  test('a landing code carried only in the fragment is still found', () => {
+    expect(parseLandingFromUrl('https://realunit.app/invite#code=AB12CD')).toEqual({
+      kind: 'invite',
+      code: 'AB12CD',
+    });
+  });
+});

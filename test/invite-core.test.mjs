@@ -1275,6 +1275,19 @@ describe('codeFromPastedReferralUrl', () => {
     expect(
       codeFromPastedReferralUrl('https://example.com/r/realunit.app/invite/ATTACKER'),
     ).toBeNull();
+    // A fragment that itself looks like a landing path is unwrapped: this is
+    // the one path that still reaches unwrapNestedCode, and the anchor must
+    // not stop it.
+    expect(codeFromPastedReferralUrl('https://realunit.app/invite#/invite/AB12CD')).toBe('AB12CD');
+    // Our host as the very first path segment has no marker in front of it
+    // either, so it is refused the same way.
+    expect(
+      codeFromPastedReferralUrl('https://example.com/realunit.app/invite/ATTACKER'),
+    ).toBeNull();
+    // The marked viewer forms keep working.
+    expect(
+      codeFromPastedReferralUrl('https://www.google.com/amp/s/realunit.app/invite/AB12CD'),
+    ).toBe('AB12CD');
     expect(
       codeFromPastedReferralUrl('https://cdn.ampproject.org/c/s/www.realunit.app/promo/EVT1'),
     ).toBe('EVT1');
