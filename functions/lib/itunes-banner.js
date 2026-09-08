@@ -41,7 +41,9 @@ function unescapeFullwidthUrlChars(value) {
 }
 
 function unwrapNestedCode(code) {
-  const nested = /(?:invite|promo)\/([^/?#]+)/i.exec(code);
+  // Anchored like the browser mirror in public/js/lib/invite-core.js: an
+  // issued code ending in "…INVITE/ABC" must not be folded onto "ABC".
+  const nested = /(?:^|\/)(?:invite|promo)\/([^/?#]+)/i.exec(code);
   return nested ? nested[1] : code;
 }
 
@@ -110,8 +112,12 @@ function embeddedRealunitLanding(text) {
     /https?:\/\/(?:www\.|dev\.)?realunit\.app(?=[/?#]|$)(?:\/(?:invite|promo)(?:\/[^\s<>#?&]*)?)?(?:[?#][^\s<>]*)?/i,
   );
   if (https) return https[0];
-  const host = value.match(/(?:www\.|dev\.)?realunit\.app\/(?:invite|promo)\/[^\s<>?#&]*/i);
-  if (host) return host[0];
+  // Bounded on the left: without it "evilrealunit.app/invite/X" contains our
+  // host as a substring and would be accepted as one of our landing URLs.
+  const host = value.match(
+    /(?:^|[\s/"'=(<])((?:www\.|dev\.)?realunit\.app\/(?:invite|promo)\/[^\s<>?#&]*)/i,
+  );
+  if (host) return host[1];
   const wallet = value.match(
     /realunit-wallet:(?:\/\/)?(?:invite|promo)(?:\/[^\s<>#?]*)?(?:[?#][^\s<>]*)?/i,
   );

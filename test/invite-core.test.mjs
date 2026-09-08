@@ -379,9 +379,12 @@ describe('parseCodeFromLocation', () => {
       kind: 'invite',
       code: 'AB12CD',
     });
+    // An issued code is not a wrapper just because "invite/" appears inside it:
+    // folding this onto AB12CD would credit a different referrer. Unwrapping is
+    // anchored at the start or a slash, so the value survives intact.
     expect(parseCodeFromLocation('/invite', '?code=prefixinvite/AB12CD')).toEqual({
       kind: 'invite',
-      code: 'AB12CD',
+      code: 'PREFIXINVITE/AB12CD',
     });
     expect(parseCodeFromLocation('/invite', '?code=invite%2FAB%252F12')).toEqual({
       kind: 'invite',
@@ -1263,9 +1266,15 @@ describe('codeFromPastedReferralUrl', () => {
     expect(
       codeFromPastedReferralUrl('https://example.com/?u=https://realunit.app:443/invite/AB12CD'),
     ).toBe('AB12CD');
-    expect(codeFromPastedReferralUrl('https://example.com/%zz/realunit.app/invite/AB12CD')).toBe(
-      'AB12CD',
-    );
+    // A foreign host must not be able to smuggle a code by putting our host in
+    // its own path: only marked viewer forms (/amp/s/<host>, /c/s/<host>,
+    // /https/<host>) may do that, and this one carries no marker.
+    expect(
+      codeFromPastedReferralUrl('https://example.com/%zz/realunit.app/invite/AB12CD'),
+    ).toBeNull();
+    expect(
+      codeFromPastedReferralUrl('https://example.com/r/realunit.app/invite/ATTACKER'),
+    ).toBeNull();
     expect(
       codeFromPastedReferralUrl('https://cdn.ampproject.org/c/s/www.realunit.app/promo/EVT1'),
     ).toBe('EVT1');

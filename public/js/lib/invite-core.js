@@ -295,7 +295,10 @@
   }
 
   function unwrapNestedCode(code) {
-    var nested = /(?:invite|promo)\/([^/?#]+)/i.exec(code);
+    // Anchored at the start or a slash: an issued code that merely ends in
+    // "…INVITE/ABC" must not be folded onto "ABC", which would credit the
+    // wrong referrer. Codes may legitimately contain a slash.
+    var nested = /(?:^|\/)(?:invite|promo)\/([^/?#]+)/i.exec(code);
     return nested ? nested[1] : code;
   }
 
@@ -697,6 +700,12 @@
     }
     for (var h = 0; h < segs.length; h++) {
       if (!isRealUnitHost(segs[h])) continue;
+      // Only viewer forms put the origin host into the path, and they always
+      // mark it: AMP uses /amp/s/<host> and /c/s/<host>, android-app and intent
+      // URLs use /https/<host>. Without such a marker any site could smuggle a
+      // foreign code through its own path and have it credited.
+      var marker = h > 0 ? segs[h - 1].toLowerCase() : '';
+      if (marker !== 's' && marker !== 'https' && marker !== 'http') continue;
       var rest = segs.slice(h).join('/');
       return codeFromPastedReferralUrl('https://' + rest) || codeFromPastedReferralUrl(rest);
     }
