@@ -383,8 +383,14 @@
 
   var base = core.apiBase({ host: window.location.hostname, paramApi: params.get('api') });
   var url = core.buildLookupUrl(base, parsed.code);
+  // The path only tells us how the link was written; the API tells us what the
+  // code actually is. Until the lookup answers we go with the path, then every
+  // hand-off below is re-applied with the confirmed kind — otherwise
+  // /invite/<a promo code> would send `invite=` to the app while the page
+  // already shows the promo copy.
+  var effectiveKind = parsed.kind;
   var appHref = core.openInAppUrl(
-    parsed.kind,
+    effectiveKind,
     parsed.code,
     document.documentElement.getAttribute('data-platform'),
   );
@@ -407,8 +413,8 @@
   }
   var handoffActive = false;
   function setShareAppLinks() {
-    var href = core.landingCanonicalHref(window.location.hostname, parsed.kind, parsed.code);
-    var scheme = core.appLink(parsed.kind, parsed.code);
+    var href = core.landingCanonicalHref(window.location.hostname, effectiveKind, parsed.code);
+    var scheme = core.appLink(effectiveKind, parsed.code);
     ensureMeta('meta[property="al:ios:url"]', 'property', 'al:ios:url').setAttribute(
       'content',
       scheme,
@@ -522,13 +528,13 @@
   }
   function setInstallHandoff() {
     handoffActive = true;
-    setMeta('meta[name="apple-itunes-app"]', core.itunesBanner(parsed.kind, parsed.code));
+    setMeta('meta[name="apple-itunes-app"]', core.itunesBanner(effectiveKind, parsed.code));
     androidAlt = ensureAltLink(androidAlt, 'data-android-app');
-    androidAlt.setAttribute('href', core.androidAppUrl(parsed.kind, parsed.code));
+    androidAlt.setAttribute('href', core.androidAppUrl(effectiveKind, parsed.code));
     iosAlt = ensureAltLink(iosAlt, 'data-ios-app');
-    iosAlt.setAttribute('href', core.iosAppUrl(parsed.kind, parsed.code));
+    iosAlt.setAttribute('href', core.iosAppUrl(effectiveKind, parsed.code));
     document.querySelectorAll('a[data-store="play"]').forEach(function (el) {
-      el.setAttribute('href', core.playStoreUrl(parsed.code, parsed.kind));
+      el.setAttribute('href', core.playStoreUrl(parsed.code, effectiveKind));
     });
     setShareAppLinks();
   }
@@ -615,6 +621,21 @@
       if (sourceLang && sourceLang !== lang) okBodyEl.setAttribute('lang', sourceLang);
       else okBodyEl.removeAttribute('lang');
       setNoTranslate(okBodyEl, !!lockTranslate);
+    }
+    // The API has now told us what this code is. Re-apply the hand-off so the
+    // deeplink, the smart app banner and the Play install referrer carry the
+    // confirmed kind, not the one the URL happened to use.
+    var confirmedKind = result.state === 'promo' ? 'promo' : 'invite';
+    if (confirmedKind !== effectiveKind) {
+      effectiveKind = confirmedKind;
+      appHref = core.openInAppUrl(
+        effectiveKind,
+        parsed.code,
+        document.documentElement.getAttribute('data-platform'),
+      );
+      var ctaEl = document.getElementById('ok-cta');
+      if (ctaEl && ctaEl.hasAttribute('href')) ctaEl.setAttribute('href', appHref);
+      if (handoffActive) setInstallHandoff();
     }
     if (result.state === 'promo') {
       setPitch('promo');

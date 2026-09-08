@@ -674,6 +674,35 @@ test.describe('invite and promo landing', () => {
     await expect(page.locator('#ok-body')).toHaveText('Björn lädt dich ein zu RealUnit.');
   });
 
+  test('a promo code reached through /invite hands the app the confirmed kind', async ({
+    page,
+  }) => {
+    await page.route(REFERRAL_CODE_ENDPOINT, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          kind: 'promo',
+          actionText: 'Mit dem Code EVT1 schenken wir dir 20 Token.',
+        }),
+      }),
+    );
+    await page.goto('/invite/EVT1');
+    await expect(page.locator('#state-ok')).toBeVisible();
+
+    // The path said invite, the API said promo. The page already switches its
+    // copy on the API answer; the hand-off to the app must follow it too, or
+    // the install referrer and the smart app banner claim the wrong programme.
+    await expect(page.locator('a[data-store="play"]').first()).toHaveAttribute(
+      'href',
+      /referrer=promo%3DEVT1/,
+    );
+    await expect(page.locator('meta[name="apple-itunes-app"]')).toHaveAttribute(
+      'content',
+      /app-argument=[^"]*promo/,
+    );
+  });
+
   test('a successful invite lookup shows the greeting and the custom-scheme CTA', async ({
     page,
   }) => {
