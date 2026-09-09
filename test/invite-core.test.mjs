@@ -172,6 +172,13 @@ describe('parseCodeFromPath', () => {
     // Two different codes sharing a 32-character prefix must not be capped
     // onto the same value silently.
     expect(parseCodeFromPath(`/invite/${'B'.repeat(32)}X`).code).toBe('B'.repeat(32));
+    // Capping must not expose a separator the fold is meant to drop, and it
+    // must never cut a surrogate pair in half — a lone surrogate makes
+    // encodeURIComponent throw when the code goes into the lookup URL.
+    expect(parseCodeFromPath(`/invite/${'C'.repeat(31)}.D`).code).toBe('C'.repeat(31));
+    const withEmoji = parseCodeFromPath(`/invite/${'E'.repeat(31)}\u{1F600}`).code;
+    expect(withEmoji).toBe('E'.repeat(31));
+    expect(() => encodeURIComponent(withEmoji)).not.toThrow();
   });
 
   test('drops trailing sentence punct like the API sanitizeReferralCode', () => {

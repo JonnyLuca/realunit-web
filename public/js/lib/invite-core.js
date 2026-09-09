@@ -327,10 +327,18 @@
     code = stripInvisibleCodeChars(code).replace(/\s+/gu, '');
     code = unwrapNestedCode(code);
     if (!code) return null;
-    // Same fold as the API sanitizeReferralCode (uppercase, drop trailing punct, max 32).
-    code = code.toUpperCase().replace(/[.?#&,;!/]+$/g, '');
+    // Same fold as the API sanitizeReferralCode (uppercase, drop trailing punct,
+    // max 32). Cap before the final strip: cutting at 32 can expose a trailing
+    // separator that the strip is meant to remove.
+    code = code.toUpperCase();
+    if (code.length > 32) {
+      code = code.slice(0, 32);
+      // Never leave half of a surrogate pair behind — encodeURIComponent throws
+      // on a lone surrogate, which would break buildLookupUrl and appLink.
+      if (/[\uD800-\uDBFF]$/.test(code)) code = code.slice(0, -1);
+    }
+    code = code.replace(/[.?#&,;!/]+$/g, '');
     if (!code) return null;
-    if (code.length > 32) code = code.slice(0, 32);
     // capCode of a leftover URL is never a programme token.
     if (code.indexOf('://') !== -1) return null;
     return code;
